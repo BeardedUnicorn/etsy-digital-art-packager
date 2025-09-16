@@ -19,13 +19,13 @@ interface SidebarLayoutProps {
 
 export function SidebarLayout({ navigation, activeId, onNavigate, children, footer }: SidebarLayoutProps) {
   return (
-    <div className={classNames('min-h-screen', theme.appGradient, theme.appBackground)}>
-      <div className="flex min-h-screen">
-        <aside className="hidden w-72 border-r border-slate-900/70 bg-slate-950/80 px-6 py-10 lg:block">
-          <div className="flex flex-col gap-10">
+    <div className={classNames('h-screen overflow-hidden', theme.appGradient, theme.appBackground)}>
+      <div className="flex h-full">
+        <aside className="hidden h-full w-72 flex-shrink-0 border-r border-slate-900/70 bg-slate-950/80 px-6 py-10 lg:block">
+          <div className="flex h-full flex-col gap-10">
             <div>
-              <div className="text-xs uppercase tracking-[0.4em] text-slate-500">Image Toolkit</div>
-              <h1 className="mt-2 text-2xl font-semibold text-slate-100">Crop & Generate</h1>
+              <div className="text-xs uppercase tracking-[0.4em] text-slate-500">Etsy Digital</div>
+              <h1 className="mt-2 text-2xl font-semibold text-slate-100">Art Packager</h1>
             </div>
 
             <nav className="flex flex-col gap-2">
@@ -71,11 +71,11 @@ export function SidebarLayout({ navigation, activeId, onNavigate, children, foot
           </div>
         </aside>
 
-        <main className="flex w-full flex-col">
+        <main className="flex w-full min-h-0 flex-col">
           <div className="flex items-center justify-between border-b border-slate-900/70 bg-slate-950/60 px-6 py-6 shadow-lg shadow-black/40 lg:hidden">
             <div>
-              <div className="text-xs uppercase tracking-[0.4em] text-slate-500">Image Toolkit</div>
-              <h1 className="mt-1 text-lg font-semibold text-slate-100">Crop & Generate</h1>
+              <div className="text-xs uppercase tracking-[0.4em] text-slate-500">Etsy Digital</div>
+              <h1 className="mt-1 text-lg font-semibold text-slate-100">Art Packager</h1>
             </div>
             <div className="flex gap-2">
               {navigation.map((item) => (
