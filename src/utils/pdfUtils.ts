@@ -28,6 +28,31 @@ const PAGE_WIDTH = 612;
 const PAGE_HEIGHT = 792;
 const PAGE_MARGIN = 48;
 
+const palette = {
+  background: {
+    base: rgb(0.05, 0.06, 0.1),
+    panel: rgb(0.08, 0.09, 0.14),
+    mist: rgb(0.13, 0.14, 0.21),
+  },
+  accent: {
+    primary: rgb(0.56, 0.42, 0.98),
+    secondary: rgb(0.37, 0.63, 0.89),
+    highlight: rgb(0.83, 0.56, 0.98),
+    glow: rgb(0.2, 0.28, 0.56),
+  },
+  text: {
+    primary: rgb(0.94, 0.96, 1),
+    muted: rgb(0.68, 0.72, 0.88),
+    subtle: rgb(0.52, 0.57, 0.78),
+    onAccent: rgb(0.99, 0.99, 1),
+    accent: rgb(0.79, 0.86, 1),
+  },
+  border: {
+    subtle: rgb(0.26, 0.3, 0.48),
+    strong: rgb(0.36, 0.4, 0.62),
+  },
+};
+
 const isHttpLink = (value: string) => /^https?:\/\//i.test(value.trim());
 
 const dataUrlToUint8Array = (dataUrl: string) => {
@@ -53,9 +78,11 @@ export async function generateInstructionsPdf(options: GenerateInstructionsPdfOp
   const pdfDoc = await PDFDocument.create();
 
   const brandIdentity = 'Sacred Realms Studio';
+  const brandTagline = 'Ethereal print experiences for tranquil homes';
+  const brandUrl = 'sacredrealms.studio';
   const displayShopName = shopName.trim() || brandIdentity;
   const artLabel = artTitle.trim();
-  pdfDoc.setTitle(`${brandIdentity} – Art Download Guide`);
+  pdfDoc.setTitle(`${brandIdentity} – Digital Download Guide`);
 
   const titleFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   const bodyFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -70,7 +97,7 @@ export async function generateInstructionsPdf(options: GenerateInstructionsPdfOp
       const logoBytes = dataUrlToUint8Array(normalizedLogoDataUrl);
       const logoIsPng = normalizedLogoDataUrl.startsWith('data:image/png');
       const embeddedLogo = logoIsPng ? await pdfDoc.embedPng(logoBytes) : await pdfDoc.embedJpg(logoBytes);
-      const dimensions = embeddedLogo.scaleToFit(120, 40);
+      const dimensions = embeddedLogo.scaleToFit(160, 60);
       shopLogoImage = embeddedLogo;
       shopLogoDimensions = dimensions;
     } catch (error) {
@@ -78,152 +105,233 @@ export async function generateInstructionsPdf(options: GenerateInstructionsPdfOp
     }
   }
 
-  const backgroundBase = rgb(0.97, 0.96, 0.94);
-  const accentPrimary = rgb(0.36, 0.24, 0.53);
-  const accentSecondary = rgb(0.89, 0.76, 0.55);
-  const accentHighlight = rgb(0.6, 0.44, 0.7);
-  const textPrimary = rgb(0.16, 0.15, 0.18);
-  const textMuted = rgb(0.42, 0.41, 0.44);
-  const textOnAccent = rgb(0.97, 0.96, 1);
-
-  const HERO_HEIGHT = 160;
-  const FOOTER_HEIGHT = 68;
+  const HERO_HEIGHT = 188;
+  const FOOTER_HEIGHT = 72;
 
   const createPageContext = (withHero: boolean) => {
     const page = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+    const pageNumber = pdfDoc.getPageCount();
 
-    page.drawRectangle({ x: 0, y: 0, width: PAGE_WIDTH, height: PAGE_HEIGHT, color: backgroundBase });
+    page.drawRectangle({ x: 0, y: 0, width: PAGE_WIDTH, height: PAGE_HEIGHT, color: palette.background.base });
+
+    const glowShapes = [
+      { x: PAGE_MARGIN + 40, y: PAGE_HEIGHT - 80, size: 120, color: palette.accent.highlight, opacity: 0.16 },
+      { x: PAGE_WIDTH - 70, y: PAGE_HEIGHT - 160, size: 140, color: palette.accent.secondary, opacity: 0.14 },
+      { x: PAGE_WIDTH - 120, y: 180, size: 120, color: palette.accent.primary, opacity: 0.1 },
+      { x: PAGE_MARGIN + 30, y: 140, size: 90, color: palette.accent.glow, opacity: 0.14 },
+    ];
+
+    glowShapes.forEach((shape) => {
+      page.drawCircle({
+        x: shape.x,
+        y: shape.y,
+        size: shape.size,
+        color: shape.color,
+        opacity: shape.opacity,
+      });
+    });
 
     page.drawRectangle({
-      x: -40,
-      y: PAGE_HEIGHT - 220,
-      width: 320,
-      height: 240,
-      color: accentSecondary,
-      opacity: 0.22,
-      rotate: degrees(-8),
+      x: PAGE_MARGIN - 36,
+      y: -60,
+      width: 16,
+      height: PAGE_HEIGHT + 120,
+      color: palette.accent.secondary,
+      opacity: 0.4,
+      rotate: degrees(-4),
     });
     page.drawRectangle({
-      x: PAGE_WIDTH - 240,
-      y: PAGE_HEIGHT - 210,
-      width: 300,
-      height: 260,
-      color: accentHighlight,
+      x: PAGE_MARGIN - 20,
+      y: -40,
+      width: 8,
+      height: PAGE_HEIGHT + 80,
+      color: palette.accent.primary,
+      opacity: 0.32,
+      rotate: degrees(-5),
+    });
+
+    const headerHeight = withHero ? HERO_HEIGHT : 132;
+    const headerBottom = PAGE_HEIGHT - headerHeight;
+
+    page.drawRectangle({
+      x: 0,
+      y: headerBottom,
+      width: PAGE_WIDTH,
+      height: headerHeight,
+      color: palette.background.panel,
+      opacity: withHero ? 0.94 : 0.9,
+    });
+
+    page.drawRectangle({
+      x: -24,
+      y: headerBottom - 36,
+      width: PAGE_WIDTH * 0.6,
+      height: headerHeight + 72,
+      color: palette.accent.primary,
+      opacity: 0.2,
+      rotate: degrees(-7),
+    });
+    page.drawRectangle({
+      x: PAGE_WIDTH * 0.45,
+      y: headerBottom - 28,
+      width: PAGE_WIDTH * 0.55,
+      height: headerHeight + 60,
+      color: palette.accent.secondary,
       opacity: 0.18,
       rotate: degrees(9),
     });
-    page.drawRectangle({
-      x: -50,
-      y: -70,
-      width: 280,
-      height: 220,
-      color: accentPrimary,
-      opacity: 0.08,
-      rotate: degrees(7),
+
+    page.drawCircle({
+      x: PAGE_WIDTH - 110,
+      y: PAGE_HEIGHT - headerHeight / 2,
+      size: headerHeight / 1.6,
+      color: palette.accent.highlight,
+      opacity: 0.14,
     });
 
-    const headerHeight = withHero ? HERO_HEIGHT : 110;
-    page.drawRectangle({
-      x: 0,
-      y: PAGE_HEIGHT - headerHeight,
-      width: PAGE_WIDTH,
-      height: headerHeight,
-      color: accentPrimary,
-      opacity: withHero ? 0.88 : 0.82,
-    });
-    page.drawRectangle({
-      x: -10,
-      y: PAGE_HEIGHT - headerHeight - 24,
-      width: PAGE_WIDTH * 0.45,
-      height: headerHeight + 48,
-      color: accentSecondary,
-      opacity: 0.18,
-      rotate: degrees(-3),
+    const label = 'Digital download guide'.toUpperCase();
+    const labelWidth = bodyFont.widthOfTextAtSize(label, 9);
+    page.drawText(label, {
+      x: PAGE_WIDTH - PAGE_MARGIN - labelWidth,
+      y: PAGE_HEIGHT - 28,
+      size: 9,
+      font: bodyFont,
+      color: palette.text.accent,
     });
 
-    const heroTitle = brandIdentity.toUpperCase();
-    const heroSubtitle = artLabel ? `Artwork: ${artLabel}` : 'Printable Art Collection';
-    const heroTagline = 'Curated digital art for mindful interiors';
-    const headerBaseline = PAGE_HEIGHT - 62;
+    let headerCursor = PAGE_HEIGHT - 60;
+    const brandSize = withHero ? 27 : 20;
+    page.drawText(brandIdentity.toUpperCase(), {
+      x: PAGE_MARGIN,
+      y: headerCursor,
+      size: brandSize,
+      font: titleFont,
+      color: palette.text.onAccent,
+    });
+    headerCursor -= brandSize + 6;
 
     if (withHero) {
-      page.drawText(heroTitle, {
-        x: PAGE_MARGIN,
-        y: headerBaseline,
-        size: 26,
-        font: titleFont,
-        color: textOnAccent,
-      });
+      const heroSubtitle = artLabel ? `Artwork: ${artLabel}` : 'Digital art download set';
       page.drawText(heroSubtitle, {
         x: PAGE_MARGIN,
-        y: headerBaseline - 28,
+        y: headerCursor,
         size: 13,
         font: italicFont,
-        color: rgb(0.93, 0.9, 0.99),
+        color: palette.text.accent,
       });
-      const preparedLabelBaseline = headerBaseline - 48;
+      headerCursor -= 18;
+
+      page.drawText(brandTagline, {
+        x: PAGE_MARGIN,
+        y: headerCursor,
+        size: 11,
+        font: bodyFont,
+        color: palette.text.muted,
+      });
+      headerCursor -= 16;
+
       page.drawText('Prepared for', {
         x: PAGE_MARGIN,
-        y: preparedLabelBaseline,
-        size: 10,
+        y: headerCursor,
+        size: 9,
         font: bodyFont,
-        color: rgb(0.9, 0.86, 0.97),
+        color: palette.text.muted,
       });
-      const shopNameFontSize = 14;
-      const shopRowBaseline = preparedLabelBaseline - 18;
-      let shopRowX = PAGE_MARGIN;
-      if (shopLogoImage && shopLogoDimensions) {
-        const centerY = shopRowBaseline + shopNameFontSize / 2;
-        const logoY = centerY - shopLogoDimensions.height / 2;
-        page.drawImage(shopLogoImage, {
-          x: shopRowX,
-          y: logoY,
-          width: shopLogoDimensions.width,
-          height: shopLogoDimensions.height,
-        });
-        shopRowX += shopLogoDimensions.width + 12;
-      }
-      page.drawText(displayShopName, {
-        x: shopRowX,
-        y: shopRowBaseline,
-        size: shopNameFontSize,
-        font: titleFont,
-        color: rgb(0.93, 0.9, 0.99),
-      });
+      headerCursor -= 14;
     } else {
-      page.drawText(heroTitle, {
+      const compactSubtitle = artLabel || 'Download guide overview';
+      page.drawText(compactSubtitle, {
         x: PAGE_MARGIN,
-        y: headerBaseline,
-        size: 18,
-        font: titleFont,
-        color: textOnAccent,
-      });
-      page.drawText(heroTagline, {
-        x: PAGE_MARGIN,
-        y: headerBaseline - 22,
-        size: 10,
+        y: headerCursor,
+        size: 12,
         font: italicFont,
-        color: rgb(0.92, 0.88, 0.97),
+        color: palette.text.muted,
       });
+      headerCursor -= 18;
     }
+
+    const shopNameFontSize = withHero ? 13 : 11;
+    const shopRowBaseline = headerCursor;
+    let shopRowX = PAGE_MARGIN;
+    const rowCenter = shopRowBaseline + shopNameFontSize / 2;
+
+    if (shopLogoImage && shopLogoDimensions) {
+      const targetHeight = withHero ? 34 : 26;
+      const height = Math.min(targetHeight, shopLogoDimensions.height);
+      const width = (shopLogoDimensions.width / shopLogoDimensions.height) * height;
+      const logoY = rowCenter - height / 2;
+
+      page.drawRectangle({
+        x: shopRowX - 8,
+        y: logoY - 4,
+        width: width + 16,
+        height: height + 8,
+        color: palette.background.mist,
+        opacity: 0.75,
+        borderColor: palette.border.strong,
+        borderWidth: 0.5,
+      });
+      page.drawImage(shopLogoImage, {
+        x: shopRowX,
+        y: logoY,
+        width,
+        height,
+      });
+      shopRowX += width + 14;
+    }
+
+    page.drawText(displayShopName, {
+      x: shopRowX,
+      y: shopRowBaseline,
+      size: shopNameFontSize,
+      font: titleFont,
+      color: palette.text.onAccent,
+    });
+    headerCursor = shopRowBaseline - shopNameFontSize - 12;
 
     page.drawRectangle({
       x: 0,
       y: 0,
       width: PAGE_WIDTH,
       height: FOOTER_HEIGHT,
-      color: rgb(0.95, 0.93, 0.9),
+      color: palette.background.panel,
       opacity: 0.92,
     });
-    page.drawText(`${brandIdentity}  •  sacredrealms.studio`, {
-      x: PAGE_MARGIN,
-      y: 24,
-      size: 10,
-      font: bodyFont,
-      color: textMuted,
+    page.drawRectangle({
+      x: 0,
+      y: FOOTER_HEIGHT - 2,
+      width: PAGE_WIDTH,
+      height: 2,
+      color: palette.accent.secondary,
+      opacity: 0.35,
     });
 
-    const startY = PAGE_HEIGHT - headerHeight - 40;
+    const footerPrimary = `${brandIdentity}  •  ${brandUrl}`;
+    page.drawText(footerPrimary, {
+      x: PAGE_MARGIN,
+      y: 26,
+      size: 10,
+      font: bodyFont,
+      color: palette.text.muted,
+    });
+    page.drawText('Crafted for intentional interior styling', {
+      x: PAGE_MARGIN,
+      y: 12,
+      size: 8,
+      font: italicFont,
+      color: palette.text.muted,
+    });
+    const pageNumberLabel = `Page ${pageNumber}`;
+    const pageNumberWidth = bodyFont.widthOfTextAtSize(pageNumberLabel, 9);
+    page.drawText(pageNumberLabel, {
+      x: PAGE_WIDTH - PAGE_MARGIN - pageNumberWidth,
+      y: 26,
+      size: 9,
+      font: bodyFont,
+      color: palette.text.muted,
+    });
+
+    const startY = PAGE_HEIGHT - headerHeight - 64;
     return { page, cursorY: startY };
   };
 
@@ -265,21 +373,27 @@ export async function generateInstructionsPdf(options: GenerateInstructionsPdfOp
       size?: number;
       color?: ReturnType<typeof rgb>;
       lineHeight?: number;
+      xOffset?: number;
+      maxWidth?: number;
+      spacingAfter?: number;
     } = {},
   ) => {
     const {
       font = bodyFont,
       size = 12,
-      color = textPrimary,
+      color = palette.text.primary,
       lineHeight,
+      xOffset = 0,
+      maxWidth = contentWidth,
+      spacingAfter = 10,
     } = options;
-    const resolvedLineHeight = lineHeight ?? size + 6;
-    const lines = wrapText(text, font, size, contentWidth);
+    const resolvedLineHeight = lineHeight ?? size + 5;
+    const lines = wrapText(text, font, size, maxWidth);
     lines.forEach((line) => {
       ensureSpace(resolvedLineHeight);
       const baseline = cursorY - size;
       page.drawText(line, {
-        x: PAGE_MARGIN,
+        x: PAGE_MARGIN + xOffset,
         y: baseline,
         size,
         font,
@@ -287,92 +401,208 @@ export async function generateInstructionsPdf(options: GenerateInstructionsPdfOp
       });
       cursorY = baseline - (resolvedLineHeight - size);
     });
+    cursorY -= spacingAfter;
   };
 
   const drawDivider = (width = contentWidth, offset = 0) => {
-    ensureSpace(20);
-    const y = cursorY - 12;
-    page.drawLine({
-      start: { x: PAGE_MARGIN + offset, y },
-      end: { x: PAGE_MARGIN + offset + width, y },
-      thickness: 1,
-      color: accentPrimary,
-      opacity: 0.2,
-    });
-    cursorY = y - 12;
-  };
-
-  const drawSectionTitle = (text: string) => {
-    ensureSpace(48);
-    page.drawText(text, {
-      x: PAGE_MARGIN,
-      y: cursorY - 20,
-      size: 16,
-      font: titleFont,
-      color: accentPrimary,
-    });
-    cursorY -= 24;
-    drawDivider(contentWidth * 0.5);
-  };
-
-  const drawBadge = (label: string) => {
-    const chipText = label.toUpperCase();
-    const paddingX = 10;
-    const height = 16;
-    const textWidth = bodyFont.widthOfTextAtSize(chipText, 9);
-    const width = Math.min(contentWidth, textWidth + paddingX * 2);
-    ensureSpace(height + 10);
-    const y = cursorY - height;
+    ensureSpace(32);
+    const x = PAGE_MARGIN + offset;
+    const y = cursorY - 16;
     page.drawRectangle({
-      x: PAGE_MARGIN,
+      x,
       y,
       width,
-      height,
-      color: accentPrimary,
-      opacity: 0.14,
+      height: 1.2,
+      color: palette.border.subtle,
+      opacity: 0.7,
     });
-    page.drawText(chipText, {
-      x: PAGE_MARGIN + paddingX,
-      y: y + 4,
-      size: 9,
+    page.drawRectangle({
+      x,
+      y: y + 2,
+      width: Math.min(120, width * 0.4),
+      height: 2,
+      color: palette.accent.secondary,
+      opacity: 0.45,
+    });
+    cursorY = y - 18;
+  };
+
+  const drawSectionTitle = (title: string, eyebrow?: string) => {
+    ensureSpace(90);
+    const accentY = cursorY - 16;
+    page.drawRectangle({
+      x: PAGE_MARGIN,
+      y: accentY,
+      width: 52,
+      height: 3,
+      color: palette.accent.secondary,
+      opacity: 0.85,
+    });
+
+    let baseline = accentY - 14;
+    if (eyebrow) {
+      page.drawText(eyebrow.toUpperCase(), {
+        x: PAGE_MARGIN,
+        y: baseline,
+        size: 9,
+        font: bodyFont,
+        color: palette.text.accent,
+      });
+      baseline -= 16;
+    } else {
+      baseline -= 6;
+    }
+
+    page.drawText(title, {
+      x: PAGE_MARGIN,
+      y: baseline,
+      size: 18,
+      font: titleFont,
+      color: palette.text.primary,
+    });
+    cursorY = baseline - 28;
+  };
+
+  const drawRatioCard = (heading: string, sizesDescription: string) => {
+    const labelHeight = 9;
+    const headingSize = 13;
+    const infoSize = 11;
+    const paddingX = 20;
+    const paddingY = 18;
+    const infoLineHeight = infoSize + 4;
+    const lines = wrapText(`Sizes: ${sizesDescription}`, bodyFont, infoSize, contentWidth - paddingX * 2);
+    const cardHeight =
+      paddingY * 2 +
+      labelHeight +
+      6 +
+      headingSize +
+      8 +
+      lines.length * infoLineHeight;
+
+    ensureSpace(cardHeight + 28);
+
+    const cardX = PAGE_MARGIN;
+    const cardY = cursorY - cardHeight;
+
+    page.drawRectangle({
+      x: cardX - 6,
+      y: cardY - 8,
+      width: contentWidth + 12,
+      height: cardHeight + 16,
+      color: palette.accent.glow,
+      opacity: 0.18,
+    });
+    page.drawRectangle({
+      x: cardX,
+      y: cardY,
+      width: contentWidth,
+      height: cardHeight,
+      color: palette.background.panel,
+      opacity: 0.97,
+      borderColor: palette.border.subtle,
+      borderWidth: 1,
+    });
+    page.drawRectangle({
+      x: cardX - 3,
+      y: cardY + 12,
+      width: 6,
+      height: cardHeight - 24,
+      color: palette.accent.primary,
+      opacity: 0.78,
+    });
+
+    const textX = cardX + paddingX;
+    let textBaseline = cardY + cardHeight - paddingY;
+
+    textBaseline -= labelHeight;
+    page.drawText(`${heading} ratio`.toUpperCase(), {
+      x: textX,
+      y: textBaseline,
+      size: labelHeight,
       font: bodyFont,
-      color: accentPrimary,
+      color: palette.text.accent,
     });
-    cursorY = y - 10;
+
+    textBaseline -= 6 + headingSize;
+    page.drawText(heading, {
+      x: textX,
+      y: textBaseline,
+      size: headingSize,
+      font: titleFont,
+      color: palette.text.primary,
+    });
+
+    textBaseline -= 8;
+    lines.forEach((line) => {
+      textBaseline -= infoSize;
+      page.drawText(line, {
+        x: textX,
+        y: textBaseline,
+        size: infoSize,
+        font: bodyFont,
+        color: palette.text.muted,
+      });
+      textBaseline -= infoLineHeight - infoSize;
+    });
+
+    cursorY = cardY - 22;
   };
 
   const drawLinkButton = (label: string, url: string) => {
-    const buttonHeight = 34;
-    const paddingX = 18;
+    const buttonHeight = 38;
+    const paddingX = 22;
     const fontSize = 12;
     const textWidth = bodyFont.widthOfTextAtSize(label, fontSize);
     const width = Math.min(contentWidth, textWidth + paddingX * 2);
-    ensureSpace(buttonHeight + 24);
+
+    ensureSpace(buttonHeight + 32);
+
     const x = PAGE_MARGIN;
     const y = cursorY - buttonHeight;
+
     page.drawRectangle({
-      x,
-      y,
-      width,
-      height: buttonHeight,
-      color: accentPrimary,
-      opacity: 0.92,
+      x: x - 2,
+      y: y - 4,
+      width: width + 4,
+      height: buttonHeight + 8,
+      color: palette.accent.glow,
+      opacity: 0.25,
+      rotate: degrees(-1.5),
     });
     page.drawRectangle({
       x,
       y,
       width,
       height: buttonHeight,
-      borderColor: accentSecondary,
+      color: palette.accent.primary,
+      opacity: 0.95,
+    });
+    page.drawRectangle({
+      x,
+      y,
+      width,
+      height: buttonHeight,
+      color: palette.accent.secondary,
+      opacity: 0.4,
+      rotate: degrees(2),
+    });
+    page.drawRectangle({
+      x,
+      y,
+      width,
+      height: buttonHeight,
+      borderColor: palette.border.strong,
       borderWidth: 1,
-      opacity: 0.35,
+      opacity: 0.6,
     });
+
+    const textY = y + (buttonHeight - fontSize) / 2;
     page.drawText(label, {
       x: x + paddingX,
-      y: y + (buttonHeight - fontSize) / 2,
+      y: textY,
       size: fontSize,
       font: bodyFont,
-      color: textOnAccent,
+      color: palette.text.onAccent,
     });
 
     const rect = PDFArray.withContext(pdfDoc.context);
@@ -402,118 +632,149 @@ export async function generateInstructionsPdf(options: GenerateInstructionsPdfOp
     const annotationRef = pdfDoc.context.register(annotation);
     page.node.addAnnot(annotationRef);
 
-    cursorY = y - 16;
+    cursorY = y - 20;
   };
 
   const drawCallout = (text: string) => {
     const font = bodyFont;
     const size = 12;
-    const innerWidth = contentWidth - 24;
-    const lines = wrapText(text, font, size, innerWidth);
+    const paddingX = 20;
+    const paddingY = 18;
+    const innerWidth = contentWidth - paddingX * 2;
     const lineHeight = size + 6;
-    const calloutHeight = lines.length * lineHeight + 24;
-    ensureSpace(calloutHeight + 20);
+    const lines = wrapText(text, font, size, innerWidth);
+    const calloutHeight = paddingY * 2 + lines.length * lineHeight;
+
+    ensureSpace(calloutHeight + 28);
+
+    const x = PAGE_MARGIN;
     const y = cursorY - calloutHeight;
+
     page.drawRectangle({
-      x: PAGE_MARGIN,
+      x: x - 4,
+      y: y - 6,
+      width: contentWidth + 8,
+      height: calloutHeight + 12,
+      color: palette.accent.glow,
+      opacity: 0.2,
+    });
+    page.drawRectangle({
+      x,
       y,
       width: contentWidth,
       height: calloutHeight,
-      color: rgb(1, 1, 1),
-      opacity: 0.95,
-      borderColor: accentSecondary,
+      color: palette.background.panel,
+      opacity: 0.97,
+      borderColor: palette.border.strong,
       borderWidth: 1,
     });
+    page.drawRectangle({
+      x: x - 2,
+      y: y + 12,
+      width: 4,
+      height: calloutHeight - 24,
+      color: palette.accent.primary,
+      opacity: 0.8,
+    });
 
-    let textCursor = cursorY - 18;
+    let textBaseline = y + calloutHeight - paddingY;
     lines.forEach((line) => {
-      const baseline = textCursor - size;
+      textBaseline -= size;
       page.drawText(line, {
-        x: PAGE_MARGIN + 12,
-        y: baseline,
+        x: x + paddingX,
+        y: textBaseline,
         size,
         font,
-        color: textPrimary,
+        color: palette.text.primary,
       });
-      textCursor = baseline - (lineHeight - size);
+      textBaseline -= lineHeight - size;
     });
+
     cursorY = y - 24;
   };
 
-  drawSectionTitle('Artwork preview');
+  drawSectionTitle('Artwork preview', 'Visual reference');
 
   if (previewImageDataUrl) {
     try {
       const bytes = dataUrlToUint8Array(previewImageDataUrl);
       const isPng = previewImageDataUrl.startsWith('data:image/png');
       const embeddedImage = isPng ? await pdfDoc.embedPng(bytes) : await pdfDoc.embedJpg(bytes);
-      const dimensions = embeddedImage.scaleToFit(contentWidth - 48, 260);
-      const framePadding = 16;
-      const frameWidth = dimensions.width + framePadding * 2;
-      const frameHeight = dimensions.height + framePadding * 2;
-      ensureSpace(frameHeight + 32);
+      const dimensions = embeddedImage.scaleToFit(contentWidth - 80, 280);
+      const framePaddingX = 22;
+      const framePaddingY = 18;
+      const frameWidth = dimensions.width + framePaddingX * 2;
+      const frameHeight = dimensions.height + framePaddingY * 2;
+
+      ensureSpace(frameHeight + 40);
+
       const x = PAGE_MARGIN + (contentWidth - frameWidth) / 2;
       const y = cursorY - frameHeight;
+
       page.drawRectangle({
-        x: x - 4,
-        y: y - 4,
-        width: frameWidth + 8,
-        height: frameHeight + 8,
-        color: accentPrimary,
-        opacity: 0.08,
+        x: x - 10,
+        y: y - 12,
+        width: frameWidth + 20,
+        height: frameHeight + 24,
+        color: palette.accent.glow,
+        opacity: 0.2,
+        rotate: degrees(-1.8),
       });
       page.drawRectangle({
         x,
         y,
         width: frameWidth,
         height: frameHeight,
-        color: rgb(1, 1, 1),
-        opacity: 0.96,
-        borderColor: accentPrimary,
+        color: palette.background.panel,
+        opacity: 0.98,
+        borderColor: palette.border.strong,
         borderWidth: 1,
       });
       page.drawImage(embeddedImage, {
-        x: x + framePadding,
-        y: y + framePadding,
+        x: x + framePaddingX,
+        y: y + framePaddingY,
         width: dimensions.width,
         height: dimensions.height,
       });
       cursorY = y - 28;
     } catch (error) {
       console.warn('Failed to embed preview image in PDF', error);
+      drawParagraph('Preview image could not be displayed in the PDF layout.', {
+        font: italicFont,
+        size: 12,
+        color: palette.text.muted,
+        lineHeight: 16,
+        spacingAfter: 14,
+      });
     }
   } else {
-    drawParagraph('Artwork preview will appear here when you include a generated image.', {
+    drawParagraph('Artwork preview will appear here once you include an image export in the generator.', {
       font: italicFont,
       size: 12,
-      color: textMuted,
+      color: palette.text.muted,
+      lineHeight: 16,
+      spacingAfter: 14,
     });
   }
 
-  drawSectionTitle('Available ratios & sizes');
+  drawSectionTitle('Available ratios & sizes', 'Print-ready formats');
 
   if (ratios.length === 0) {
-    drawParagraph('Ratios will appear here after you generate final images.', {
+    drawParagraph('Ratios will populate after you generate your final image set.', {
       font: italicFont,
       size: 12,
-      color: textMuted,
+      color: palette.text.muted,
+      lineHeight: 16,
+      spacingAfter: 14,
     });
   } else {
     ratios.forEach((entry) => {
       const sizes = entry.sizes.length ? entry.sizes.join(', ') : 'No sizes recorded';
-      drawBadge(entry.ratioName);
-      drawParagraph(`Sizes: ${sizes}`, {
-        size: 12,
-        font: bodyFont,
-        lineHeight: 18,
-      });
-      cursorY -= 4;
+      drawRatioCard(entry.ratioName, sizes);
     });
   }
 
-  cursorY -= 4;
-
-  drawSectionTitle('Download instructions');
+  drawSectionTitle('Download instructions', 'Accessing your files');
 
   const trimmedLink = downloadLink.trim();
   if (trimmedLink) {
@@ -522,38 +783,49 @@ export async function generateInstructionsPdf(options: GenerateInstructionsPdfOp
       drawParagraph(trimmedLink, {
         font: bodyFont,
         size: 10,
-        color: textMuted,
+        color: palette.text.muted,
+        spacingAfter: 6,
       });
-      drawParagraph('Tip: save your files locally before sharing them with collectors or printing services.', {
+      drawParagraph('Tip: Save your files locally before sharing them with collectors or print partners.', {
         font: italicFont,
         size: 11,
-        color: textMuted,
+        color: palette.text.muted,
         lineHeight: 16,
+        spacingAfter: 12,
+      });
+      drawParagraph('Share this link with customers only after verifying the contents of the download.', {
+        font: bodyFont,
+        size: 11,
+        color: palette.text.muted,
+        lineHeight: 16,
+        spacingAfter: 18,
       });
     } else {
       drawCallout(trimmedLink);
     }
   } else {
-    drawParagraph('Add a download link in the generator to include customer instructions here.', {
+    drawParagraph('Add a download link in the generator to include tailored customer instructions here.', {
       font: italicFont,
       size: 12,
-      color: textMuted,
+      color: palette.text.muted,
       lineHeight: 18,
+      spacingAfter: 14,
     });
   }
 
-  cursorY -= 6;
   drawDivider(contentWidth);
-  drawParagraph('Thank you for supporting Sacred Realms Studio. We hope these printable works bring warmth and inspiration to your space.', {
+  drawParagraph('Thank you for supporting Sacred Realms Studio. Your purchase nurtures immersive art for mindful, modern sanctuaries.', {
     font: italicFont,
     size: 11,
-    color: textMuted,
+    color: palette.text.muted,
     lineHeight: 16,
+    spacingAfter: 6,
   });
   drawParagraph('With gratitude, The Sacred Realms Studio team', {
     font: italicFont,
     size: 11,
-    color: textMuted,
+    color: palette.text.muted,
+    spacingAfter: 0,
   });
 
   return pdfDoc.save();
