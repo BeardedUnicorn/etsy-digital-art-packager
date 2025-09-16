@@ -8,7 +8,17 @@ function hexToRgba(color: string, alpha: number): string {
   if (!color) return `rgba(255,255,255,${a})`;
   const hex = color.trim();
   if (!hex.startsWith('#')) {
-    // If it's already rgb/rgba or a named color, fall back to using global alpha behavior
+    const lowered = hex.toLowerCase();
+    // Normalize rgb/rgba to use provided alpha
+    if (lowered.startsWith('rgb(') || lowered.startsWith('rgba(')) {
+      const inside = lowered.substring(lowered.indexOf('(') + 1, lowered.lastIndexOf(')'));
+      const parts = inside.split(',').map((p) => p.trim());
+      if (parts.length >= 3) {
+        const [r, g, b] = parts;
+        return `rgba(${r}, ${g}, ${b}, ${a})`;
+      }
+    }
+    // Named colors or other formats: return as-is (will still render, but opacity may not apply)
     return hex;
   }
   const raw = hex.slice(1);
