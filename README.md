@@ -1,4 +1,4 @@
-# Image Cropper
+# Etsy Digital Art Packager
 
 Desktop app for quickly generating print‑ready crops from a single high‑resolution image, with optional watermarks. Built with Tauri (Rust) + React + TypeScript.
 

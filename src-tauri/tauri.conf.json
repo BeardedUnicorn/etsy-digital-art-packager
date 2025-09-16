@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2.0.0",
-  "productName": "Image Cropper",
+  "productName": "Etsy Digital Art Packager",
   "version": "0.1.0",
-  "identifier": "com.imagecropper.app",
+  "identifier": "com.etsydigitalartpackager.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Image Cropper",
+        "title": "Etsy Digital Art Packager",
         "width": 1400,
         "height": 900,
         "resizable": true,
