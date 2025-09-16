@@ -1,6 +1,27 @@
 import { WatermarkSettings } from '../types';
 import { DPI } from '../constants/cropRatios';
 
+// Convert a hex color string like "#fff" or "#ffffff" to an rgba string
+// If parsing fails, returns the original color string.
+function hexToRgba(color: string, alpha: number): string {
+  const a = Math.max(0, Math.min(1, alpha));
+  if (!color) return `rgba(255,255,255,${a})`;
+  const hex = color.trim();
+  if (!hex.startsWith('#')) {
+    // If it's already rgb/rgba or a named color, fall back to using global alpha behavior
+    return hex;
+  }
+  const raw = hex.slice(1);
+  const normalized = raw.length === 3
+    ? raw.split('').map((c) => c + c).join('')
+    : raw;
+  if (normalized.length !== 6) return color;
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+
 export const addWatermarkToCanvas = (
   canvas: HTMLCanvasElement,
   settings: WatermarkSettings
@@ -28,25 +49,25 @@ export const addWatermarkToCanvas = (
   const scaledMarginX = settings.marginX * scaleFactor;
   const scaledMarginY = settings.marginY * scaleFactor;
   
-  // Set up watermark style BEFORE setting opacity
+  // Set up watermark style
   ctx.font = `${scaledFontSize}px Arial`;
   ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = settings.color;
+  // Apply opacity directly to fill color when possible
+  const fillStyle = hexToRgba(settings.color, settings.opacity);
+  ctx.fillStyle = fillStyle;
   
   // Calculate text metrics
   const textMetrics = ctx.measureText(settings.text);
   const textWidth = textMetrics.width;
   const textHeight = scaledFontSize;
   
-  // Add text shadow for better visibility (before opacity)
-  const shadowColor = settings.color === '#ffffff' ? '#000000' : '#ffffff';
-  ctx.shadowColor = shadowColor;
+  // Add text shadow for better visibility (match opacity so fading is perceptible)
+  const baseShadow = settings.color.toLowerCase() === '#ffffff' ? '#000000' : '#ffffff';
+  // Slightly reduce shadow relative to text to avoid overpowering at low opacity
+  ctx.shadowColor = hexToRgba(baseShadow, Math.max(0, Math.min(1, settings.opacity * 0.8)));
   ctx.shadowBlur = Math.max(2, scaleFactor * 2);
   ctx.shadowOffsetX = Math.max(1, scaleFactor);
   ctx.shadowOffsetY = Math.max(1, scaleFactor);
-  
-  // Set opacity AFTER other properties
-  ctx.globalAlpha = settings.opacity;
   
   if (settings.position === 'repeat') {
     // Repeat watermark across the image with custom spacing
@@ -111,7 +132,6 @@ export const addWatermarkToCanvas = (
   }
   
   // Reset context properties
-  ctx.globalAlpha = 1;
   ctx.shadowColor = 'transparent';
   ctx.shadowBlur = 0;
   ctx.shadowOffsetX = 0;
