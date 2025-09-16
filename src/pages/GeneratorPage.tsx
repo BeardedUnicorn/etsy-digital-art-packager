@@ -28,7 +28,9 @@ interface GeneratorPageProps {
   sourceInfo: SourceImageInfo | null;
   shopName: string;
   artTitle: string;
+  downloadLink: string;
   onArtTitleChange: (title: string) => void;
+  onDownloadLinkChange: (link: string) => void;
   onOpenSettings: () => void;
 }
 
@@ -49,7 +51,9 @@ export function GeneratorPage({
   sourceInfo,
   shopName,
   artTitle,
+  downloadLink,
   onArtTitleChange,
+  onDownloadLinkChange,
   onOpenSettings,
 }: GeneratorPageProps) {
   const totalSizes = CROP_RATIOS.reduce((sum, ratio) => sum + ratio.sizes.length, 0);
@@ -221,6 +225,28 @@ export function GeneratorPage({
           />
           <p className={`${theme.subheading} text-xs`}>
             Example filenames: <span className="font-mono text-slate-300">{exampleWatermarked}</span> / <span className="font-mono text-slate-300">{exampleFinal}</span>
+          </p>
+        </div>
+      </Panel>
+
+      <Panel
+        title="Delivery link"
+        description="Provide a URL or set of instructions that will be embedded in the download PDF for your customers."
+      >
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-slate-200" htmlFor="download-link-input">
+            Download URL or instructions
+          </label>
+          <input
+            id="download-link-input"
+            type="text"
+            value={downloadLink}
+            onChange={(event) => onDownloadLinkChange(event.target.value)}
+            className={`${theme.input} w-full rounded-xl px-4 py-2 transition-colors duration-200`}
+            placeholder="https://yourshop.com/downloads/abc123"
+          />
+          <p className={`${theme.subheading} text-xs`}>
+            The PDF will include this link as a clickable section so customers can grab their files instantly.
           </p>
         </div>
       </Panel>

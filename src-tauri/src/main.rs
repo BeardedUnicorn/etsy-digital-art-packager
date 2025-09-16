@@ -14,6 +14,12 @@ struct ImagePayload {
     subdir: Option<String>,
 }
 
+#[derive(Deserialize)]
+struct PdfPayload {
+    filename: String,
+    data: Vec<u8>,
+}
+
 fn decode_image_data(image_data: &str) -> Result<Vec<u8>, String> {
     let base64_data = image_data
         .strip_prefix("data:image/jpeg;base64,")
@@ -62,6 +68,7 @@ async fn save_image(
 async fn save_multiple_images(
     app: tauri::AppHandle,
     images: Vec<ImagePayload>,
+    pdf: Option<PdfPayload>,
 ) -> Result<String, String> {
     use tauri_plugin_dialog::DialogExt;
 
@@ -74,6 +81,7 @@ async fn save_multiple_images(
         let base_folder = PathBuf::from(folder.as_path().ok_or("Invalid folder path")?);
         let mut saved_count = 0;
         let mut failed_count = 0;
+        let mut pdf_status = None;
 
         for item in images {
             let mut target_folder = base_folder.clone();
@@ -103,6 +111,20 @@ async fn save_multiple_images(
             }
         }
 
+        if let Some(pdf_payload) = pdf {
+            let mut file_path = base_folder.clone();
+            file_path.push(format!("{}.pdf", pdf_payload.filename));
+            match fs::write(&file_path, pdf_payload.data) {
+                Ok(_) => {
+                    pdf_status = Some(format!("Instructions PDF saved to {}", file_path.display()));
+                }
+                Err(err) => {
+                    eprintln!("Failed to save instructions PDF: {}", err);
+                    pdf_status = Some("Failed to save instructions PDF".to_string());
+                }
+            }
+        }
+
         let message = if failed_count == 0 {
             format!(
                 "Successfully saved {} images to {}",
@@ -118,7 +140,11 @@ async fn save_multiple_images(
             )
         };
 
-        Ok(message)
+        if let Some(status) = pdf_status {
+            Ok(format!("{} ({})", message, status))
+        } else {
+            Ok(message)
+        }
     } else {
         Err("Folder selection cancelled by user".to_string())
     }

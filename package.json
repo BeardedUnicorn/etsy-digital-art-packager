@@ -15,6 +15,7 @@
     "@types/fabric": "^5.3.10",
     "canvas": "^2.11.2",
     "fabric": "^6.7.1",
+    "pdf-lib": "^1.17.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-image-crop": "^11.0.10"

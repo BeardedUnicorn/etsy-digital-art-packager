@@ -15,6 +15,7 @@ import {
   getSizeKey,
 } from './utils/imageUtils';
 import { addWatermarkToCanvas } from './utils/watermarkUtils';
+import { generateInstructionsPdf } from './utils/pdfUtils';
 import { WatermarkSettings, CroppedImage, ProcessingProgress, ProcessingSettings, SourceImageInfo } from './types';
 
 const defaultWatermarkSettings: WatermarkSettings = {
@@ -96,6 +97,7 @@ function App() {
     'processingSettings',
     defaultProcessingSettings,
   );
+  const [downloadLink, setDownloadLink] = useLocalStorage('downloadLink', '');
 
   const resetWatermarkSettings = useCallback(() => {
     setWatermarkSettings({ ...defaultWatermarkSettings });
@@ -406,15 +408,73 @@ function App() {
   const downloadAll = useCallback(async () => {
     if (croppedImages.length === 0) return;
 
-    try {
-      const imageData = croppedImages.map((img) => ({
-        filename: img.fileName,
-        data: img.dataUrl,
-        subdir: img.isWatermarked ? 'watermarked' : 'final',
-      }));
+    const finalImages = croppedImages.filter((img) => !img.isWatermarked);
+    const previewCandidate =
+      finalImages.reduce<CroppedImage | null>((best, current) => {
+        if (!best) return current;
+        const bestArea = best.width * best.height;
+        const currentArea = current.width * current.height;
+        return currentArea > bestArea ? current : best;
+      }, null) || croppedImages[0] || null;
 
+    const ratioMap = new Map<string, Set<string>>();
+    finalImages.forEach((image) => {
+      const existing = ratioMap.get(image.category) ?? new Set<string>();
+      existing.add(image.size);
+      ratioMap.set(image.category, existing);
+    });
+
+    const ratioSummaries = Array.from(ratioMap.entries())
+      .map(([ratioName, sizes]) => ({ ratioName, sizes: Array.from(sizes).sort() }))
+      .sort((a, b) => a.ratioName.localeCompare(b.ratioName));
+
+    const sanitizeSegment = (value: string) =>
+      value
+        .replace(/×/g, 'x')
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9]+/g, '')
+        .toLowerCase();
+
+    const pdfBaseSegments: string[] = [];
+    if (processingSettings.shopName) {
+      pdfBaseSegments.push(processingSettings.shopName);
+    }
+    const artSegment = sanitizeSegment(artTitle || '');
+    if (artSegment) {
+      pdfBaseSegments.push(artSegment);
+    }
+    pdfBaseSegments.push('instructions');
+    const pdfFileName = pdfBaseSegments.filter(Boolean).join('_') || 'download_instructions';
+
+    let pdfBytes: Uint8Array | null = null;
+    try {
+      pdfBytes = await generateInstructionsPdf({
+        shopName: processingSettings.shopName,
+        artTitle,
+        downloadLink,
+        ratios: ratioSummaries,
+        previewImageDataUrl: previewCandidate?.dataUrl ?? null,
+      });
+    } catch (pdfError) {
+      console.error('Error creating instructions PDF:', pdfError);
+    }
+
+    const imageData = croppedImages.map((img) => ({
+      filename: img.fileName,
+      data: img.dataUrl,
+      subdir: img.isWatermarked ? 'watermarked' : 'final',
+    }));
+
+    try {
       const result = await invoke<string>('save_multiple_images', {
         images: imageData,
+        pdf: pdfBytes
+          ? {
+              filename: pdfFileName,
+              data: Array.from(pdfBytes),
+            }
+          : undefined,
       });
       console.log('Images saved:', result);
     } catch (error) {
@@ -429,8 +489,25 @@ function App() {
           document.body.removeChild(link);
         }, index * 300);
       });
+
+      if (pdfBytes) {
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${pdfFileName}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
     }
-  }, [croppedImages]);
+  }, [
+    artTitle,
+    croppedImages,
+    downloadLink,
+    processingSettings.shopName,
+  ]);
 
   const openPreviewAt = useCallback((index: number) => {
     if (croppedImages.length === 0) return;
@@ -483,7 +560,9 @@ function App() {
             sourceInfo={sourceInfo}
             shopName={processingSettings.shopName}
             artTitle={artTitle}
+            downloadLink={downloadLink}
             onArtTitleChange={setArtTitle}
+            onDownloadLinkChange={setDownloadLink}
             onOpenSettings={() => setActivePage('settings')}
           />
         ) : (
