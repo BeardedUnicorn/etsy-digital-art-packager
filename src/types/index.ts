@@ -53,6 +53,8 @@ export interface ProcessingSettings {
   dpiOverrides: Record<string, number>;
   // Shop name prefix appended to output filenames (no spaces)
   shopName: string;
+  // Optional data URL representing the shop logo for branded documents
+  shopLogoDataUrl: string | null;
 }
 
 export interface SourceImageInfo {

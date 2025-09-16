@@ -35,6 +35,7 @@ const defaultProcessingSettings: ProcessingSettings = {
   defaultDpi: 600,
   dpiOverrides: {},
   shopName: '',
+  shopLogoDataUrl: null,
 };
 
 const navigationConfig: NavigationItem[] = [
@@ -132,10 +133,17 @@ function App() {
 
 
   useEffect(() => {
-    if (processingSettings.shopName === undefined) {
-      setProcessingSettings((prev) => ({ ...prev, shopName: '' }));
+    if (
+      processingSettings.shopName === undefined ||
+      processingSettings.shopLogoDataUrl === undefined
+    ) {
+      setProcessingSettings((prev) => ({
+        ...prev,
+        shopName: prev.shopName ?? '',
+        shopLogoDataUrl: prev.shopLogoDataUrl ?? null,
+      }));
     }
-  }, [processingSettings.shopName, setProcessingSettings]);
+  }, [processingSettings.shopLogoDataUrl, processingSettings.shopName, setProcessingSettings]);
 
   useEffect(() => {
     if (!watermarkSettings.enabled) {
@@ -451,6 +459,7 @@ function App() {
     try {
       pdfBytes = await generateInstructionsPdf({
         shopName: processingSettings.shopName,
+        shopLogoDataUrl: processingSettings.shopLogoDataUrl ?? null,
         artTitle,
         downloadLink,
         ratios: ratioSummaries,
@@ -507,6 +516,7 @@ function App() {
     croppedImages,
     downloadLink,
     processingSettings.shopName,
+    processingSettings.shopLogoDataUrl,
   ]);
 
   const openPreviewAt = useCallback((index: number) => {
