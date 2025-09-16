@@ -222,27 +222,6 @@ export function GeneratorPage({
 
       {processing && <ProgressBar progress={progress} />}
 
-      {!processing && !hasResults && !hasImage && (
-        <EmptyState
-          title="Upload an image to begin"
-          description="We'll guide you through watermarking and exporting as soon as a source image is loaded."
-          icon={
-            <svg className="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6H16a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v8" />
-            </svg>
-          }
-          action={
-            <button
-              type="button"
-              onClick={onOpenSettings}
-              className={`${theme.subtleButton} rounded-xl px-4 py-2 text-sm font-semibold text-slate-200 transition-transform hover:scale-[1.01]`}
-            >
-              Review settings
-            </button>
-          }
-        />
-      )}
-
       {!processing && hasImage && !hasResults && (
         <EmptyState
           title="Generate your image set"
