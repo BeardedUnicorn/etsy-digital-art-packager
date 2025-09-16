@@ -1,13 +1,17 @@
 import { DPI } from '../constants/cropRatios';
 
-export const convertToPixels = (value: number, unit: 'in' | 'mm'): number => {
+export const convertToPixels = (value: number, unit: 'in' | 'mm', dpi: number = DPI): number => {
+  const d = dpi ?? DPI;
   if (unit === 'in') {
-    return Math.round(value * DPI);
+    return Math.round(value * d);
   } else {
     // Convert mm to inches first, then to pixels
-    return Math.round((value / 25.4) * DPI);
+    return Math.round((value / 25.4) * d);
   }
 };
+
+// Stable key for mapping size-specific settings
+export const getSizeKey = (ratioName: string, sizeName: string): string => `${ratioName}|${sizeName}`;
 
 export const cropImageToRatio = (
   sourceCanvas: HTMLCanvasElement,

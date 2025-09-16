@@ -37,3 +37,12 @@ export interface ProcessingProgress {
   currentTask: string;
   isComplete: boolean;
 }
+
+export interface ProcessingSettings {
+  // JPEG quality for output encoding (0.1 - 1.0)
+  jpegQuality: number;
+  // Default DPI used when no override exists for a size
+  defaultDpi: number;
+  // Per-size DPI overrides keyed by `${ratioName}|${sizeName}`
+  dpiOverrides: Record<string, number>;
+}

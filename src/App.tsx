@@ -15,7 +15,9 @@ import {
   convertToPixels
 } from './utils/imageUtils';
 import { addWatermarkToCanvas } from './utils/watermarkUtils';
-import { WatermarkSettings, CroppedImage, ProcessingProgress } from './types';
+import { WatermarkSettings, CroppedImage, ProcessingProgress, ProcessingSettings } from './types';
+import { OutputSettings } from './components/OutputSettings';
+import { getSizeKey } from './utils/imageUtils';
 
 const defaultWatermarkSettings: WatermarkSettings = {
   text: '© Your Name',
@@ -45,7 +47,13 @@ function App() {
     defaultWatermarkSettings
   );
 
-  const processImages = useCallback(async (canvas: HTMLCanvasElement, settings: WatermarkSettings) => {
+  const [processingSettings, setProcessingSettings] = useLocalStorage<ProcessingSettings>('processingSettings', {
+    jpegQuality: 0.9,
+    defaultDpi: 600,
+    dpiOverrides: {},
+  });
+
+  const processImages = useCallback(async (canvas: HTMLCanvasElement, settings: WatermarkSettings, proc: ProcessingSettings) => {
     const totalSizes = CROP_RATIOS.reduce((sum, ratio) => sum + ratio.sizes.length, 0);
     
     setProgress({
@@ -65,7 +73,7 @@ function App() {
       }));
 
       const croppedCanvas = cropImageToRatio(canvas, ratio.ratio);
-      
+     
       for (const size of ratio.sizes) {
         currentIndex++;
         
@@ -79,8 +87,9 @@ function App() {
         await new Promise(resolve => setTimeout(resolve, 30));
 
         try {
-          const targetWidth = convertToPixels(size.width, size.unit);
-          const targetHeight = convertToPixels(size.height, size.unit);
+          const dpi = proc.dpiOverrides[getSizeKey(ratio.name, size.name)] ?? proc.defaultDpi;
+          const targetWidth = convertToPixels(size.width, size.unit, dpi);
+          const targetHeight = convertToPixels(size.height, size.unit, dpi);
           
           const resizedCanvas = resizeImageToTargetSize(croppedCanvas, targetWidth, targetHeight);
           const finalCanvas = addWatermarkToCanvas(resizedCanvas, settings);
@@ -95,14 +104,13 @@ function App() {
               } else {
                 // Fallback path
                 try {
-                  resolve(finalCanvas.toDataURL('image/jpeg', 0.9));
+                  resolve(finalCanvas.toDataURL('image/jpeg', proc.jpegQuality));
                 } catch (e) {
-                  // As a last resort, return an empty string (will be caught below)
                   console.error('Both toBlob and toDataURL failed', e);
                   resolve('');
                 }
               }
-            }, 'image/jpeg', 0.9);
+            }, 'image/jpeg', proc.jpegQuality);
           });
           
           if (!dataUrl) throw new Error('Failed to serialize canvas to image data');
@@ -205,7 +213,7 @@ function App() {
     
     setProcessing(true);
     try {
-      const images = await processImages(originalImage, watermarkSettings);
+      const images = await processImages(originalImage, watermarkSettings, processingSettings);
       setCroppedImages(images);
     } catch (error) {
       console.error('Error generating images:', error);
@@ -213,7 +221,7 @@ function App() {
     } finally {
       setProcessing(false);
     }
-  }, [originalImage, watermarkSettings, processImages]);
+  }, [originalImage, watermarkSettings, processingSettings, processImages]);
 
   const downloadImage = useCallback(async (image: CroppedImage) => {
     try {
@@ -288,10 +296,14 @@ function App() {
         {/* Watermark Settings and Preview */}
         {originalImage && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 space-y-8">
               <WatermarkSettingsComponent
                 settings={watermarkSettings}
                 onChange={setWatermarkSettings}
+              />
+              <OutputSettings
+                settings={processingSettings}
+                onChange={setProcessingSettings}
               />
             </div>
             <div className="lg:col-span-1">
