@@ -1,8 +1,9 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { SidebarLayout, NavigationItem } from './components/layout/SidebarLayout';
 import { GeneratorPage } from './pages/GeneratorPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { GeneratedPreviewModal } from './components/GeneratedPreviewModal';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { CROP_RATIOS } from './constants/cropRatios';
 import {
@@ -76,6 +77,8 @@ function App() {
   const [croppedImages, setCroppedImages] = useState<CroppedImage[]>([]);
   const [processing, setProcessing] = useState(false);
   const [sourceInfo, setSourceInfo] = useState<SourceImageInfo | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewIndex, setPreviewIndex] = useState(0);
   const [progress, setProgress] = useState<ProcessingProgress>({
     current: 0,
     total: 0,
@@ -99,6 +102,16 @@ function App() {
   const resetProcessingSettings = useCallback(() => {
     setProcessingSettings({ ...defaultProcessingSettings, dpiOverrides: {} });
   }, [setProcessingSettings]);
+
+
+  useEffect(() => {
+    if (croppedImages.length === 0) {
+      setIsPreviewOpen(false);
+      setPreviewIndex(0);
+      return;
+    }
+    setPreviewIndex((prev) => Math.min(prev, croppedImages.length - 1));
+  }, [croppedImages.length]);
 
   const processImages = useCallback(
     async (
@@ -310,40 +323,78 @@ function App() {
     }
   }, [croppedImages]);
 
+  const openPreviewAt = useCallback((index: number) => {
+    if (croppedImages.length === 0) return;
+    const normalized = Math.max(0, Math.min(index, croppedImages.length - 1));
+    setPreviewIndex(normalized);
+    setIsPreviewOpen(true);
+  }, [croppedImages.length]);
+
+  const closePreview = useCallback(() => {
+    setIsPreviewOpen(false);
+  }, []);
+
+  const goToPreviewIndex = useCallback((index: number) => {
+    if (croppedImages.length === 0) return;
+    const normalized = ((index % croppedImages.length) + croppedImages.length) % croppedImages.length;
+    setPreviewIndex(normalized);
+  }, [croppedImages.length]);
+
+  const stepPreview = useCallback((direction: number) => {
+    if (croppedImages.length === 0) return;
+    setPreviewIndex((prev) => {
+      const length = croppedImages.length;
+      return (prev + direction + length) % length;
+    });
+  }, [croppedImages.length]);
+
   return (
-    <SidebarLayout
-      navigation={navigationConfig}
-      activeId={activePage}
-      onNavigate={(id) => setActivePage(id as PageKey)}
-      footer={<p>All processing happens locally on your device.</p>}
-    >
-      {activePage === 'generator' ? (
-        <GeneratorPage
-          previewImage={previewImage}
-          originalImage={originalImage}
-          croppedImages={croppedImages}
-          processing={processing}
-          progress={progress}
-          onFileSelect={handleFileSelect}
-          onRemoveImage={handleRemoveImage}
-          onGenerate={generateImages}
-          onDownload={downloadImage}
-          onDownloadAll={downloadAll}
-          watermarkSettings={watermarkSettings}
-          sourceInfo={sourceInfo}
-          onOpenSettings={() => setActivePage('settings')}
-        />
-      ) : (
-        <SettingsPage
-          watermarkSettings={watermarkSettings}
-          onWatermarkChange={setWatermarkSettings}
-          processingSettings={processingSettings}
-          onProcessingChange={setProcessingSettings}
-          onResetWatermark={resetWatermarkSettings}
-          onResetProcessing={resetProcessingSettings}
-        />
-      )}
-    </SidebarLayout>
+    <>
+      <SidebarLayout
+        navigation={navigationConfig}
+        activeId={activePage}
+        onNavigate={(id) => setActivePage(id as PageKey)}
+        footer={<p>All processing happens locally on your device.</p>}
+      >
+        {activePage === 'generator' ? (
+          <GeneratorPage
+            previewImage={previewImage}
+            originalImage={originalImage}
+            croppedImages={croppedImages}
+            processing={processing}
+            progress={progress}
+            onFileSelect={handleFileSelect}
+            onRemoveImage={handleRemoveImage}
+            onGenerate={generateImages}
+            onDownload={downloadImage}
+            onDownloadAll={downloadAll}
+            onPreviewImage={openPreviewAt}
+            onPreviewAll={() => openPreviewAt(0)}
+            watermarkSettings={watermarkSettings}
+            sourceInfo={sourceInfo}
+            onOpenSettings={() => setActivePage('settings')}
+          />
+        ) : (
+          <SettingsPage
+            watermarkSettings={watermarkSettings}
+            onWatermarkChange={setWatermarkSettings}
+            processingSettings={processingSettings}
+            onProcessingChange={setProcessingSettings}
+            onResetWatermark={resetWatermarkSettings}
+            onResetProcessing={resetProcessingSettings}
+          />
+        )}
+      </SidebarLayout>
+      <GeneratedPreviewModal
+        images={croppedImages}
+        open={isPreviewOpen}
+        currentIndex={previewIndex}
+        onClose={closePreview}
+        onNavigate={goToPreviewIndex}
+        onStep={stepPreview}
+        onDownload={downloadImage}
+      />
+    </>
   );
 }
 

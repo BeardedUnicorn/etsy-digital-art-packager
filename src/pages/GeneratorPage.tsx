@@ -22,6 +22,8 @@ interface GeneratorPageProps {
   onGenerate: () => void | Promise<void>;
   onDownload: (image: CroppedImage) => void | Promise<void>;
   onDownloadAll: () => void | Promise<void>;
+  onPreviewImage: (index: number) => void;
+  onPreviewAll: () => void;
   watermarkSettings: WatermarkSettings;
   sourceInfo: SourceImageInfo | null;
   onOpenSettings: () => void;
@@ -38,6 +40,8 @@ export function GeneratorPage({
   onGenerate,
   onDownload,
   onDownloadAll,
+  onPreviewImage,
+  onPreviewAll,
   watermarkSettings,
   sourceInfo,
   onOpenSettings,
@@ -143,13 +147,22 @@ export function GeneratorPage({
               );
             } else if (step.key === 'download' && hasResults) {
               action = (
-                <button
-                  type="button"
-                  onClick={onDownloadAll}
-                  className={`${theme.accentButton} rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-purple-900/40 transition-transform hover:scale-[1.01]`}
-                >
-                  Download all
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={onPreviewAll}
+                    className={`${theme.subtleButton} rounded-xl px-4 py-2 text-sm font-semibold text-slate-200 hover:scale-[1.01] transition-transform`}
+                  >
+                    Preview images
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onDownloadAll}
+                    className={`${theme.accentButton} rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-purple-900/40 transition-transform hover:scale-[1.01]`}
+                  >
+                    Download all
+                  </button>
+                </div>
               );
             }
 
@@ -245,7 +258,13 @@ export function GeneratorPage({
       )}
 
       {hasResults && (
-        <ImagePreview images={croppedImages} onDownload={onDownload} onDownloadAll={onDownloadAll} />
+        <ImagePreview
+          images={croppedImages}
+          onDownload={onDownload}
+          onDownloadAll={onDownloadAll}
+          onPreview={onPreviewImage}
+          onPreviewAll={onPreviewAll}
+        />
       )}
     </div>
   );
