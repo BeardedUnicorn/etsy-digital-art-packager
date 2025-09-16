@@ -71,13 +71,19 @@ export const resizeImageToTargetSize = (
   }
   
   // Additional check for individual dimension limits
-  const MAX_CANVAS_DIMENSION = 32767;
+  // Most browsers (and Canvas) cap a single dimension to 16384px.
+  // Using 16384 makes generation reliable across environments.
+  const MAX_CANVAS_DIMENSION = 16384;
   if (targetWidth > MAX_CANVAS_DIMENSION || targetHeight > MAX_CANVAS_DIMENSION) {
     const scale = Math.min(MAX_CANVAS_DIMENSION / targetWidth, MAX_CANVAS_DIMENSION / targetHeight);
     targetWidth = Math.floor(targetWidth * scale);
     targetHeight = Math.floor(targetHeight * scale);
     console.warn(`Large image dimensions scaled down to ${targetWidth}x${targetHeight}`);
   }
+
+  // Guard against zero after scaling
+  targetWidth = Math.max(1, Math.floor(targetWidth));
+  targetHeight = Math.max(1, Math.floor(targetHeight));
   
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');

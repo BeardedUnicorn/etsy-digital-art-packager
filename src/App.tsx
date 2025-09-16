@@ -85,25 +85,35 @@ function App() {
           const resizedCanvas = resizeImageToTargetSize(croppedCanvas, targetWidth, targetHeight);
           const finalCanvas = addWatermarkToCanvas(resizedCanvas, settings);
           
-          // Convert to blob for better memory management with large images
-          const blob = await new Promise<Blob>((resolve) => {
+          // Prefer toBlob, but fall back to toDataURL if it returns null on very large canvases
+          const dataUrl = await new Promise<string>((resolve) => {
             finalCanvas.toBlob((blob) => {
-              resolve(blob!);
+              if (blob) {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.readAsDataURL(blob);
+              } else {
+                // Fallback path
+                try {
+                  resolve(finalCanvas.toDataURL('image/jpeg', 0.9));
+                } catch (e) {
+                  // As a last resort, return an empty string (will be caught below)
+                  console.error('Both toBlob and toDataURL failed', e);
+                  resolve('');
+                }
+              }
             }, 'image/jpeg', 0.9);
           });
           
-          const dataUrl = await new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.readAsDataURL(blob);
-          });
-          
+          if (!dataUrl) throw new Error('Failed to serialize canvas to image data');
+
           images.push({
             id: `${ratio.name}-${size.name}`,
             name: size.name,
             dataUrl: dataUrl,
-            width: targetWidth,
-            height: targetHeight,
+            // Record actual output dimensions after safety scaling
+            width: finalCanvas.width,
+            height: finalCanvas.height,
             size: size.name,
             category: ratio.name
           });
