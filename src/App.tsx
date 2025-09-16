@@ -14,7 +14,7 @@ import {
   getSizeKey,
 } from './utils/imageUtils';
 import { addWatermarkToCanvas } from './utils/watermarkUtils';
-import { WatermarkSettings, CroppedImage, ProcessingProgress, ProcessingSettings } from './types';
+import { WatermarkSettings, CroppedImage, ProcessingProgress, ProcessingSettings, SourceImageInfo } from './types';
 
 const defaultWatermarkSettings: WatermarkSettings = {
   text: '© Your Name',
@@ -26,6 +26,12 @@ const defaultWatermarkSettings: WatermarkSettings = {
   rotation: -45,
   marginX: 20,
   marginY: 20,
+};
+
+const defaultProcessingSettings: ProcessingSettings = {
+  jpegQuality: 0.9,
+  defaultDpi: 600,
+  dpiOverrides: {},
 };
 
 const navigationConfig: NavigationItem[] = [
@@ -69,6 +75,7 @@ function App() {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [croppedImages, setCroppedImages] = useState<CroppedImage[]>([]);
   const [processing, setProcessing] = useState(false);
+  const [sourceInfo, setSourceInfo] = useState<SourceImageInfo | null>(null);
   const [progress, setProgress] = useState<ProcessingProgress>({
     current: 0,
     total: 0,
@@ -82,12 +89,16 @@ function App() {
 
   const [processingSettings, setProcessingSettings] = useLocalStorage<ProcessingSettings>(
     'processingSettings',
-    {
-      jpegQuality: 0.9,
-      defaultDpi: 600,
-      dpiOverrides: {},
-    },
+    defaultProcessingSettings,
   );
+
+  const resetWatermarkSettings = useCallback(() => {
+    setWatermarkSettings({ ...defaultWatermarkSettings });
+  }, [setWatermarkSettings]);
+
+  const resetProcessingSettings = useCallback(() => {
+    setProcessingSettings({ ...defaultProcessingSettings, dpiOverrides: {} });
+  }, [setProcessingSettings]);
 
   const processImages = useCallback(
     async (
@@ -218,6 +229,13 @@ function App() {
       setOriginalImage(canvas);
       setPreviewImage(previewCanvas.toDataURL('image/jpeg', 0.8));
       setCroppedImages([]);
+      setSourceInfo({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        width: canvas.width,
+        height: canvas.height,
+      });
 
       setProgress({ current: 0, total: 0, currentTask: '', isComplete: true });
     } catch (error) {
@@ -231,6 +249,7 @@ function App() {
     setOriginalImage(null);
     setPreviewImage(null);
     setCroppedImages([]);
+    setSourceInfo(null);
   }, []);
 
   const generateImages = useCallback(async () => {
@@ -311,6 +330,8 @@ function App() {
           onDownload={downloadImage}
           onDownloadAll={downloadAll}
           watermarkSettings={watermarkSettings}
+          sourceInfo={sourceInfo}
+          onOpenSettings={() => setActivePage('settings')}
         />
       ) : (
         <SettingsPage
@@ -318,6 +339,8 @@ function App() {
           onWatermarkChange={setWatermarkSettings}
           processingSettings={processingSettings}
           onProcessingChange={setProcessingSettings}
+          onResetWatermark={resetWatermarkSettings}
+          onResetProcessing={resetProcessingSettings}
         />
       )}
     </SidebarLayout>

@@ -48,3 +48,12 @@ export interface ProcessingSettings {
   // Per-size DPI overrides keyed by `${ratioName}|${sizeName}`
   dpiOverrides: Record<string, number>;
 }
+
+export interface SourceImageInfo {
+  name: string;
+  size: number;
+  type: string;
+  width: number;
+  height: number;
+}
+

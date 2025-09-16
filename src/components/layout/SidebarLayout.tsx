@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { theme } from '../../theme';
+import { classNames } from '../../utils/classNames';
 
 export interface NavigationItem {
   id: string;
@@ -16,12 +17,9 @@ interface SidebarLayoutProps {
   footer?: ReactNode;
 }
 
-const combine = (...classes: Array<string | undefined | false | null>) =>
-  classes.filter(Boolean).join(' ');
-
 export function SidebarLayout({ navigation, activeId, onNavigate, children, footer }: SidebarLayoutProps) {
   return (
-    <div className={combine('min-h-screen', theme.appGradient, theme.appBackground)}>
+    <div className={classNames('min-h-screen', theme.appGradient, theme.appBackground)}>
       <div className="flex min-h-screen">
         <aside className="hidden w-72 border-r border-slate-900/70 bg-slate-950/80 px-6 py-10 lg:block">
           <div className="flex flex-col gap-10">
@@ -37,17 +35,17 @@ export function SidebarLayout({ navigation, activeId, onNavigate, children, foot
                   <button
                     key={item.id}
                     onClick={() => onNavigate(item.id)}
-                    className={combine(
+                    className={classNames(
                       'group flex flex-col rounded-2xl border px-4 py-3 text-left transition-all duration-200',
                       isActive
-                        ? `${theme.navActive}`
-                        : `border-transparent bg-transparent ${theme.navInactive}`,
+                        ? theme.navActive
+                        : classNames('border-transparent bg-transparent', theme.navInactive),
                     )}
                   >
                     <div className="flex items-center gap-3">
                       {item.icon && (
                         <span
-                          className={combine(
+                          className={classNames(
                             'flex h-9 w-9 items-center justify-center rounded-xl border transition-colors duration-200',
                             isActive
                               ? 'border-purple-400/50 bg-purple-500/10 text-purple-200'
@@ -84,7 +82,7 @@ export function SidebarLayout({ navigation, activeId, onNavigate, children, foot
                 <button
                   key={item.id}
                   onClick={() => onNavigate(item.id)}
-                  className={combine(
+                  className={classNames(
                     'rounded-xl px-3 py-2 text-xs font-medium uppercase tracking-wide transition-colors duration-200',
                     item.id === activeId ? theme.navActive : theme.navInactive,
                   )}
