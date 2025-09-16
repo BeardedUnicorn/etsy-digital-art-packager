@@ -25,12 +25,21 @@ export function SettingsPage({
 }: SettingsPageProps) {
   const overrideCount = Object.keys(processingSettings.dpiOverrides).length;
   const watermarkBadgeClass = classNames(
-    watermarkSettings.enabled ? theme.badgeAccent : theme.badge,
+    theme.badgeAccent,
     'rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide',
   );
   const positionLabel = watermarkSettings.position.replace('-', ' ');
   const formattedPosition = positionLabel.charAt(0).toUpperCase() + positionLabel.slice(1);
   const watermarkText = watermarkSettings.text.trim() || 'Not set';
+  const shopName = processingSettings.shopName ?? '';
+  const sanitizedShopName = shopName.replace(/\s+/g, '');
+  const filenameExampleParts = [sanitizedShopName || 'shop', 'portrait', '8x10_wm'];
+  const filenameExample = filenameExampleParts.filter(Boolean).join('_');
+
+  const handleShopNameChange = (value: string) => {
+    const sanitized = value.replace(/\s+/g, '');
+    onProcessingChange({ ...processingSettings, shopName: sanitized });
+  };
 
   return (
     <div className="space-y-10">
@@ -64,7 +73,7 @@ export function SettingsPage({
         <div className="grid gap-4 md:grid-cols-2">
           <div className={`${theme.panelInset} rounded-2xl border border-slate-800/70 bg-slate-950/40 p-5`}>
             <div className="flex items-center gap-3">
-              <span className={watermarkBadgeClass}>{watermarkSettings.enabled ? 'Watermark on' : 'Watermark off'}</span>
+              <span className={watermarkBadgeClass}>Watermark on (locked)</span>
               <span className={`${theme.subheading} text-xs`}>Position: {formattedPosition}</span>
             </div>
             <div className={`${theme.subheading} text-sm mt-4 space-y-1`}>
@@ -78,6 +87,7 @@ export function SettingsPage({
               <span className={`${theme.badge} rounded-full px-3 py-1`}>JPEG {Math.round(processingSettings.jpegQuality * 100)}%</span>
               <span className={`${theme.badgeAccent} rounded-full px-3 py-1`}>{processingSettings.defaultDpi} DPI</span>
               <span className={`${theme.badge} rounded-full px-3 py-1`}>{overrideCount} overrides</span>
+              <span className={`${theme.badge} rounded-full px-3 py-1`}>Prefix: {sanitizedShopName || '—'}</span>
             </div>
             <p className={`${theme.subheading} text-sm mt-4`}>Overrides replace the default DPI per size. Leave blank to inherit the default above.</p>
           </div>
@@ -85,7 +95,29 @@ export function SettingsPage({
         <p className={`${theme.subheading} text-xs`}>Preferences are stored locally on this device. Clearing storage will reset them.</p>
       </Panel>
 
-      <WatermarkSettingsForm settings={watermarkSettings} onChange={onWatermarkChange} />
+      <Panel
+        title="Shop branding"
+        description="Set a prefix that will be prepended to every exported filename. Spaces are removed automatically."
+      >
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-slate-200" htmlFor="shop-name-input">
+            Shop name prefix
+          </label>
+          <input
+            id="shop-name-input"
+            type="text"
+            value={sanitizedShopName}
+            onChange={(event) => handleShopNameChange(event.target.value)}
+            className={`${theme.input} w-full rounded-xl px-4 py-2 transition-colors duration-200`}
+            placeholder="MyBrand"
+          />
+          <p className={`${theme.subheading} text-xs`}>
+            Example output: <span className="font-mono text-slate-300">{filenameExample}.jpg</span>
+          </p>
+        </div>
+      </Panel>
+
+      <WatermarkSettingsForm settings={{ ...watermarkSettings, enabled: true }} onChange={onWatermarkChange} />
 
       <OutputSettings settings={processingSettings} onChange={onProcessingChange} />
     </div>

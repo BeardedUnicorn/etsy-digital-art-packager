@@ -16,6 +16,8 @@ const previewButtonClass = `${theme.subtleButton} inline-flex items-center justi
 const badgeClass = `${theme.badge} inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-medium uppercase tracking-wide`;
 const badgeAccent = `${theme.badgeAccent} inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wide`;
 const badgeWarning = `${theme.badgeWarning} inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wide`;
+const variantBadgeWatermarked = `${theme.badgeAccent} inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wide`;
+const variantBadgeFinal = `${theme.badge} inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-wide`;
 
 export function ImagePreview({
   images,
@@ -60,7 +62,7 @@ export function ImagePreview({
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M15 10l4.553-.379a.5.5 0 01.447.757L16 16m-5-6l-4.553-.379a.5.5 0 00-.447.757L8 16m1 4h6m-5-4l-1-4m5 4l1-4m-3-7v3m0 0a3 3 0 100 6 3 3 0 000-6z" />
               </svg>
-              Preview generated images
+              Preview gallery
             </button>
           )}
           <button
@@ -102,7 +104,7 @@ export function ImagePreview({
                           className="group relative flex h-full w-full items-center justify-center"
                         >
                           <img
-                            src={image.dataUrl}
+                            src={image.thumbnailUrl}
                             alt={image.name}
                             className="max-h-full w-auto max-w-full object-contain"
                             loading="lazy"
@@ -113,7 +115,7 @@ export function ImagePreview({
                         </button>
                       ) : (
                         <img
-                          src={image.dataUrl}
+                          src={image.thumbnailUrl}
                           alt={image.name}
                           className="max-h-full w-auto max-w-full object-contain"
                           loading="lazy"
@@ -129,10 +131,14 @@ export function ImagePreview({
                         <h5 className="text-sm font-semibold text-slate-100 truncate" title={image.name}>
                           {image.name}
                         </h5>
+                        <p className={`${theme.subheading} text-[11px] font-mono`}>{image.fileName}.jpg</p>
                         <div className="mt-2 flex flex-wrap items-center gap-2">
                           <span className={badgeAccent}>{image.appliedDpi} DPI</span>
                           <span className={image.dpiSource === 'override' ? badgeWarning : badgeClass}>
                             {image.dpiSource === 'override' ? 'Override' : 'Default'}
+                          </span>
+                          <span className={image.variant === 'watermarked' ? variantBadgeWatermarked : variantBadgeFinal}>
+                            {image.variant === 'watermarked' ? 'Watermarked' : 'Final'}
                           </span>
                         </div>
                       </div>

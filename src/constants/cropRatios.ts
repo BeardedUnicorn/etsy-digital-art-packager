@@ -28,6 +28,14 @@ export const CROP_RATIOS: CropRatio[] = [
     ]
   },
   {
+    name: '5:7 Portrait',
+    ratio: 5/7,
+    sizes: [
+      { name: '5x7 in', width: 5, height: 7, unit: 'in' },
+      { name: '10x14 in', width: 10, height: 14, unit: 'in' },
+    ]
+  },
+  {
     name: '11x14 Standard',
     ratio: 11/14,
     sizes: [

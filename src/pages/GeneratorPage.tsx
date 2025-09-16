@@ -26,6 +26,9 @@ interface GeneratorPageProps {
   onPreviewAll: () => void;
   watermarkSettings: WatermarkSettings;
   sourceInfo: SourceImageInfo | null;
+  shopName: string;
+  artTitle: string;
+  onArtTitleChange: (title: string) => void;
   onOpenSettings: () => void;
 }
 
@@ -44,11 +47,28 @@ export function GeneratorPage({
   onPreviewAll,
   watermarkSettings,
   sourceInfo,
+  shopName,
+  artTitle,
+  onArtTitleChange,
   onOpenSettings,
 }: GeneratorPageProps) {
   const totalSizes = CROP_RATIOS.reduce((sum, ratio) => sum + ratio.sizes.length, 0);
+  const totalVariants = totalSizes * 2;
   const hasImage = Boolean(originalImage);
   const hasResults = croppedImages.length > 0;
+  const sanitizeSegment = (value: string) =>
+    value
+      .replace(/×/g, 'x')
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9]+/g, '')
+      .toLowerCase();
+  const sanitizedShopName = sanitizeSegment(shopName || '');
+  const sanitizedArtTitle = sanitizeSegment(artTitle || '');
+  const exampleParts = [sanitizedShopName || 'shop', sanitizedArtTitle || 'untitled', 'ratio', 'size'];
+  const exampleBase = exampleParts.filter(Boolean).join('_');
+  const exampleWatermarked = `${exampleBase}_wm.jpg`;
+  const exampleFinal = `${exampleBase}_final.jpg`;
 
   type StepKey = 'upload' | 'settings' | 'generate' | 'download';
   const steps: Array<{
@@ -71,13 +91,13 @@ export function GeneratorPage({
       key: 'settings',
       title: 'Review settings',
       description: 'Adjust watermark and output defaults before generating.',
-      hint: watermarkSettings.enabled ? 'Watermark enabled' : 'Watermark disabled',
+      hint: 'Watermark applied automatically; final copies included.',
       complete: hasResults,
     },
     {
       key: 'generate',
       title: 'Generate outputs',
-      description: `${totalSizes} crops will be rendered locally with your settings.`,
+      description: `${totalSizes} sizes export as watermarked and final files locally.`,
       complete: hasResults,
     },
     {
@@ -153,7 +173,7 @@ export function GeneratorPage({
                     onClick={onPreviewAll}
                     className={`${theme.subtleButton} rounded-xl px-4 py-2 text-sm font-semibold text-slate-200 hover:scale-[1.01] transition-transform`}
                   >
-                    Preview images
+                    Preview gallery
                   </button>
                   <button
                     type="button"
@@ -183,6 +203,28 @@ export function GeneratorPage({
         </ol>
       </Panel>
 
+      <Panel
+        title="Artwork details"
+        description="Set a title used in the exported filenames for both watermarked and clean variants."
+      >
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-slate-200" htmlFor="art-title-input">
+            Artwork title
+          </label>
+          <input
+            id="art-title-input"
+            type="text"
+            value={artTitle}
+            onChange={(event) => onArtTitleChange(event.target.value)}
+            className={`${theme.input} w-full rounded-xl px-4 py-2 transition-colors duration-200`}
+            placeholder="Sunset Over Sea"
+          />
+          <p className={`${theme.subheading} text-xs`}>
+            Example filenames: <span className="font-mono text-slate-300">{exampleWatermarked}</span> / <span className="font-mono text-slate-300">{exampleFinal}</span>
+          </p>
+        </div>
+      </Panel>
+
       <FileUpload
         onFileSelect={onFileSelect}
         disabled={processing}
@@ -201,7 +243,7 @@ export function GeneratorPage({
               <div className="space-y-1">
                 <p className="text-sm font-medium text-slate-200">Ready to generate</p>
                 <p className={`${theme.subheading} text-sm`}>
-                  {totalSizes} sizes across {CROP_RATIOS.length} aspect ratios will be produced.
+                  {totalSizes} sizes across {CROP_RATIOS.length} aspect ratios will produce {totalVariants} files (watermarked + clean).
                 </p>
               </div>
 
@@ -222,7 +264,7 @@ export function GeneratorPage({
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    Generate images ({totalSizes})
+                    Generate image sets ({totalSizes})
                   </>
                 )}
               </button>

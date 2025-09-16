@@ -15,12 +15,8 @@ export function WatermarkPreview({ originalCanvas, settings }: WatermarkPreviewP
       return null;
     }
 
-    if (!settings.enabled) {
-      return originalCanvas.toDataURL('image/jpeg', 0.8);
-    }
-
     try {
-      return createWatermarkPreview(originalCanvas, settings);
+      return createWatermarkPreview(originalCanvas, { ...settings, enabled: true });
     } catch (error) {
       console.error('Error creating watermark preview:', error);
       return originalCanvas.toDataURL('image/jpeg', 0.8);
@@ -35,15 +31,8 @@ export function WatermarkPreview({ originalCanvas, settings }: WatermarkPreviewP
     <Panel title="Watermark preview" description="Preview based on the most recent upload." className="max-w-xl">
       <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80">
         <img src={previewDataUrl} alt="Watermark preview" className="w-full h-auto" />
-        {!settings.enabled && (
-          <div className="absolute inset-0 flex items-center justify-center bg-slate-950/70">
-            <span className="rounded-full bg-slate-900/90 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-slate-200">
-              Watermark disabled
-            </span>
-          </div>
-        )}
       </div>
-      <p className={`${theme.subheading} text-xs`}>Adjust settings to update this preview.</p>
+      <p className={`${theme.subheading} text-xs`}>Adjust settings to update this preview; final versions export alongside the watermarked images.</p>
     </Panel>
   );
 }

@@ -24,6 +24,7 @@ export interface WatermarkSettings {
 export interface CroppedImage {
   id: string;
   name: string;
+  fileName: string;
   dataUrl: string;
   width: number;
   height: number;
@@ -31,6 +32,9 @@ export interface CroppedImage {
   category: string;
   appliedDpi: number;
   dpiSource: 'default' | 'override';
+  variant: 'watermarked' | 'final';
+  isWatermarked: boolean;
+  thumbnailUrl: string;
 }
 
 export interface ProcessingProgress {
@@ -47,6 +51,8 @@ export interface ProcessingSettings {
   defaultDpi: number;
   // Per-size DPI overrides keyed by `${ratioName}|${sizeName}`
   dpiOverrides: Record<string, number>;
+  // Shop name prefix appended to output filenames (no spaces)
+  shopName: string;
 }
 
 export interface SourceImageInfo {

@@ -69,6 +69,12 @@ export function GeneratedPreviewModal({
             <p className={`${theme.subheading} text-sm mt-1`}>
               {image.width.toLocaleString()} × {image.height.toLocaleString()} px · {image.category} · {image.appliedDpi} DPI
             </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide">
+              <span className={`${image.variant === 'watermarked' ? theme.badgeAccent : theme.badge} rounded-full px-3 py-1 font-semibold text-slate-200`}>
+                {image.variant === 'watermarked' ? 'Watermarked' : 'Final'}
+              </span>
+              <span className={`${theme.badge} rounded-full px-3 py-1 font-mono text-slate-300`}>{`${image.fileName}.jpg`}</span>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {onDownload && (
@@ -112,7 +118,7 @@ export function GeneratedPreviewModal({
 
           <div className="relative flex h-full w-full max-w-3xl flex-1 items-center justify-center overflow-hidden rounded-3xl border border-slate-800 bg-slate-950">
             <div className="flex max-h-full w-full items-center justify-center p-4">
-              <img src={image.dataUrl} alt={image.name} className="max-h-[calc(100vh-14rem)] w-auto max-w-full object-contain" />
+              <img src={image.thumbnailUrl} alt={image.name} className="max-h-[calc(100vh-14rem)] w-auto max-w-full object-contain" />
             </div>
             {hasMultiple && (
               <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 rounded-full bg-slate-950/80 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-slate-200">
