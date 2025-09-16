@@ -76,7 +76,7 @@ export function GeneratorPage({
       {showStickyProgress && (
         <div className="sticky top-0 z-30 -mx-4 -mt-10 border-b border-slate-900/70 bg-slate-950/90 px-4 py-5 backdrop-blur sm:-mx-8 sm:px-8 lg:-mx-12 lg:px-12">
           <div className="mx-auto max-w-5xl">
-            <ProgressBar progress={progress} />
+            <ProgressBar progress={progress} variant="compact" />
           </div>
         </div>
       )}
