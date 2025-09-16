@@ -29,6 +29,8 @@ export interface CroppedImage {
   height: number;
   size: string;
   category: string;
+  appliedDpi: number;
+  dpiSource: 'default' | 'override';
 }
 
 export interface ProcessingProgress {

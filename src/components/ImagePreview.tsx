@@ -82,6 +82,20 @@ export const ImagePreview: React.FC<ImagePreviewProps> = ({
                       <p className="text-xs text-gray-500 mt-1">
                         {image.width.toLocaleString()} × {image.height.toLocaleString()} px
                       </p>
+                      <div className="mt-2 inline-flex items-center space-x-2">
+                        <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                          {image.appliedDpi} DPI
+                        </span>
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                            image.dpiSource === 'override'
+                              ? 'bg-amber-100 text-amber-700 border-amber-200'
+                              : 'bg-gray-100 text-gray-600 border-gray-200'
+                          }`}
+                        >
+                          {image.dpiSource === 'override' ? 'override' : 'default'}
+                        </span>
+                      </div>
                     </div>
                     
                     <button

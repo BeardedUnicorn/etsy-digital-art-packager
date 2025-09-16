@@ -87,7 +87,9 @@ function App() {
         await new Promise(resolve => setTimeout(resolve, 30));
 
         try {
-          const dpi = proc.dpiOverrides[getSizeKey(ratio.name, size.name)] ?? proc.defaultDpi;
+          const sizeKey = getSizeKey(ratio.name, size.name);
+          const overrideUsed = sizeKey in proc.dpiOverrides;
+          const dpi = overrideUsed ? proc.dpiOverrides[sizeKey] : proc.defaultDpi;
           const targetWidth = convertToPixels(size.width, size.unit, dpi);
           const targetHeight = convertToPixels(size.height, size.unit, dpi);
           
@@ -123,7 +125,9 @@ function App() {
             width: finalCanvas.width,
             height: finalCanvas.height,
             size: size.name,
-            category: ratio.name
+            category: ratio.name,
+            appliedDpi: dpi,
+            dpiSource: overrideUsed ? 'override' : 'default',
           });
         } catch (error) {
           console.error(`Error processing ${size.name}:`, error);
