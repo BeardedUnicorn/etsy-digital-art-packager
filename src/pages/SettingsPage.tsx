@@ -1,3 +1,4 @@
+import type { ChangeEvent } from 'react';
 import { PageHeader } from '../components/common/PageHeader';
 import { WatermarkSettings, ProcessingSettings } from '../types';
 import { WatermarkSettingsForm } from '../components/WatermarkSettings';
@@ -35,10 +36,52 @@ export function SettingsPage({
   const sanitizedShopName = shopName.replace(/\s+/g, '');
   const filenameExampleParts = [sanitizedShopName || 'shop', 'portrait', '8x10_wm'];
   const filenameExample = filenameExampleParts.filter(Boolean).join('_');
+  const shopLogoDataUrl = processingSettings.shopLogoDataUrl ?? null;
 
   const handleShopNameChange = (value: string) => {
     const sanitized = value.replace(/\s+/g, '');
     onProcessingChange({ ...processingSettings, shopName: sanitized });
+  };
+
+  const handleShopLogoChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+    const isPng = file.type === 'image/png';
+    const isJpeg = file.type === 'image/jpeg' || file.type === 'image/jpg';
+    if (!isPng && !isJpeg) {
+      console.warn('Shop logo must be a PNG or JPEG image.');
+      event.target.value = '';
+      return;
+    }
+
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === 'string') {
+            resolve(reader.result);
+          } else {
+            reject(new Error('Unexpected result while reading logo file.'));
+          }
+        };
+        reader.onerror = () => {
+          reject(reader.error ?? new Error('Failed to read logo file.'));
+        };
+        reader.readAsDataURL(file);
+      });
+
+      onProcessingChange({ ...processingSettings, shopLogoDataUrl: dataUrl });
+    } catch (error) {
+      console.error('Failed to process shop logo upload', error);
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  const handleClearShopLogo = () => {
+    onProcessingChange({ ...processingSettings, shopLogoDataUrl: null });
   };
 
   return (
@@ -97,7 +140,7 @@ export function SettingsPage({
 
       <Panel
         title="Shop branding"
-        description="Set a prefix that will be prepended to every exported filename. Spaces are removed automatically."
+        description="Set a prefix for generated filenames and optionally upload a logo for your PDF instructions. Spaces are removed automatically."
       >
         <div className="space-y-2">
           <label className="block text-sm font-medium text-slate-200" htmlFor="shop-name-input">
@@ -114,6 +157,45 @@ export function SettingsPage({
           <p className={`${theme.subheading} text-xs`}>
             Example output: <span className="font-mono text-slate-300">{filenameExample}.jpg</span>
           </p>
+        </div>
+
+        <div className="mt-6 space-y-3">
+          <label className="block text-sm font-medium text-slate-200" htmlFor="shop-logo-input">
+            Shop logo
+          </label>
+          <p className={`${theme.subheading} text-xs`}>
+            Optional. Displayed in the instructions PDF next to your shop name. Upload a PNG or JPEG and we'll automatically scale it to fit the layout.
+          </p>
+          {shopLogoDataUrl ? (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-xl border border-slate-800/70 bg-slate-950/40">
+                  <img
+                    src={shopLogoDataUrl}
+                    alt="Shop logo preview"
+                    className="max-h-16 max-w-16 object-contain"
+                  />
+                </div>
+                <p className={`${theme.subheading} text-xs`}>Upload a new file to replace this logo.</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleClearShopLogo}
+                className={`${theme.subtleButton} rounded-xl px-4 py-2 text-sm font-semibold text-slate-200 transition-transform hover:scale-[1.01]`}
+              >
+                Remove logo
+              </button>
+            </div>
+          ) : (
+            <p className={`${theme.subheading} text-xs`}>No logo uploaded yet.</p>
+          )}
+          <input
+            id="shop-logo-input"
+            type="file"
+            accept="image/png,image/jpeg"
+            onChange={handleShopLogoChange}
+            className="block w-full text-sm text-slate-200 file:mr-4 file:rounded-lg file:border-0 file:bg-purple-500/70 file:px-4 file:py-2 file:font-semibold file:text-slate-100 hover:file:bg-purple-500/60"
+          />
         </div>
       </Panel>
 

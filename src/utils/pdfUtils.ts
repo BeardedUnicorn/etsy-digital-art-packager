@@ -8,7 +8,7 @@ import {
   degrees,
   rgb,
 } from 'pdf-lib';
-import type { PDFFont } from 'pdf-lib';
+import type { PDFFont, PDFImage } from 'pdf-lib';
 
 export interface PdfRatioSummary {
   ratioName: string;
@@ -17,6 +17,7 @@ export interface PdfRatioSummary {
 
 interface GenerateInstructionsPdfOptions {
   shopName: string;
+  shopLogoDataUrl?: string | null;
   artTitle: string;
   downloadLink: string;
   ratios: PdfRatioSummary[];
@@ -42,6 +43,7 @@ const dataUrlToUint8Array = (dataUrl: string) => {
 export async function generateInstructionsPdf(options: GenerateInstructionsPdfOptions): Promise<Uint8Array> {
   const {
     shopName,
+    shopLogoDataUrl,
     artTitle,
     downloadLink,
     ratios,
@@ -58,6 +60,23 @@ export async function generateInstructionsPdf(options: GenerateInstructionsPdfOp
   const titleFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   const bodyFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const italicFont = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
+
+  const normalizedLogoDataUrl = shopLogoDataUrl?.trim() || null;
+  let shopLogoImage: PDFImage | null = null;
+  let shopLogoDimensions: { width: number; height: number } | null = null;
+
+  if (normalizedLogoDataUrl) {
+    try {
+      const logoBytes = dataUrlToUint8Array(normalizedLogoDataUrl);
+      const logoIsPng = normalizedLogoDataUrl.startsWith('data:image/png');
+      const embeddedLogo = logoIsPng ? await pdfDoc.embedPng(logoBytes) : await pdfDoc.embedJpg(logoBytes);
+      const dimensions = embeddedLogo.scaleToFit(120, 40);
+      shopLogoImage = embeddedLogo;
+      shopLogoDimensions = dimensions;
+    } catch (error) {
+      console.warn('Failed to embed shop logo in PDF', error);
+    }
+  }
 
   const backgroundBase = rgb(0.97, 0.96, 0.94);
   const accentPrimary = rgb(0.36, 0.24, 0.53);
@@ -142,12 +161,34 @@ export async function generateInstructionsPdf(options: GenerateInstructionsPdfOp
         font: italicFont,
         color: rgb(0.93, 0.9, 0.99),
       });
-      page.drawText(`Prepared for ${displayShopName}`, {
+      const preparedLabelBaseline = headerBaseline - 48;
+      page.drawText('Prepared for', {
         x: PAGE_MARGIN,
-        y: headerBaseline - 48,
+        y: preparedLabelBaseline,
         size: 10,
         font: bodyFont,
         color: rgb(0.9, 0.86, 0.97),
+      });
+      const shopNameFontSize = 14;
+      const shopRowBaseline = preparedLabelBaseline - 18;
+      let shopRowX = PAGE_MARGIN;
+      if (shopLogoImage && shopLogoDimensions) {
+        const centerY = shopRowBaseline + shopNameFontSize / 2;
+        const logoY = centerY - shopLogoDimensions.height / 2;
+        page.drawImage(shopLogoImage, {
+          x: shopRowX,
+          y: logoY,
+          width: shopLogoDimensions.width,
+          height: shopLogoDimensions.height,
+        });
+        shopRowX += shopLogoDimensions.width + 12;
+      }
+      page.drawText(displayShopName, {
+        x: shopRowX,
+        y: shopRowBaseline,
+        size: shopNameFontSize,
+        font: titleFont,
+        color: rgb(0.93, 0.9, 0.99),
       });
     } else {
       page.drawText(heroTitle, {
