@@ -95,7 +95,12 @@ export const WatermarkSettingsComponent: React.FC<WatermarkSettingsProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
               <select
                 value={settings.position}
-                onChange={(e) => onChange({ ...settings, position: e.target.value as any })}
+                onChange={(e) =>
+                  onChange({
+                    ...settings,
+                    position: e.target.value as WatermarkSettings['position'],
+                  })
+                }
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white text-gray-900"
               >
                 <option value="top-left">Top Left</option>
