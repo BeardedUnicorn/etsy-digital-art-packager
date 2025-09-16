@@ -208,8 +208,8 @@ function App() {
   const downloadImage = useCallback(async (image: CroppedImage) => {
     try {
       const result = await invoke<string>('save_image', {
-        imageData: image.dataUrl,
-        filename: image.name.replace(/\s+/g, '_')
+        image_data: image.dataUrl,
+        filename: image.name.replace(/\s+/g, '_'),
       });
       console.log('Image saved:', result);
     } catch (error) {
@@ -230,7 +230,7 @@ function App() {
     try {
       const imageData = croppedImages.map(img => [
         img.name.replace(/\s+/g, '_'),
-        img.dataUrl
+        img.dataUrl,
       ]);
       
       const result = await invoke<string>('save_multiple_images', {
