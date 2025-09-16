@@ -50,7 +50,7 @@ export function GeneratedPreviewModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 px-4 py-8"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 px-4 py-6 sm:py-8"
       role="dialog"
       aria-modal="true"
       onClick={handleBackdropClick}
@@ -58,7 +58,8 @@ export function GeneratedPreviewModal({
       <div
         className={classNames(
           theme.panel,
-          'relative w-full max-w-5xl rounded-3xl p-6 shadow-2xl shadow-black/60',
+          'relative flex w-full max-w-5xl flex-col overflow-hidden rounded-3xl p-6 shadow-2xl shadow-black/60',
+          'max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)]',
         )}
         onClick={handleDialogClick}
       >
@@ -96,7 +97,7 @@ export function GeneratedPreviewModal({
           </div>
         </header>
 
-        <div className="mt-6 flex items-center justify-center gap-4">
+        <div className="mt-6 flex flex-1 items-center justify-center gap-4 overflow-hidden">
           {hasMultiple && (
             <button
               type="button"
@@ -110,8 +111,10 @@ export function GeneratedPreviewModal({
             </button>
           )}
 
-          <div className="relative w-full max-w-3xl overflow-hidden rounded-3xl border border-slate-800 bg-slate-950">
-            <img src={image.dataUrl} alt={image.name} className="w-full object-contain" />
+          <div className="relative flex w-full max-w-3xl items-center justify-center overflow-hidden rounded-3xl border border-slate-800 bg-slate-950">
+            <div className="flex max-h-[55vh] w-full items-center justify-center p-4">
+              <img src={image.dataUrl} alt={image.name} className="max-h-full w-auto max-w-full object-contain" />
+            </div>
             {hasMultiple && (
               <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 rounded-full bg-slate-950/80 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-slate-200">
                 {clampedIndex + 1} of {images.length}
@@ -134,7 +137,7 @@ export function GeneratedPreviewModal({
         </div>
 
         {hasMultiple && (
-          <div className="mt-6 flex gap-2 overflow-x-auto pb-2">
+          <div className="mt-6 flex max-h-24 gap-2 overflow-x-auto pb-2">
             {images.map((thumb, index) => {
               const isActive = index === clampedIndex;
               return (
