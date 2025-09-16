@@ -15,6 +15,7 @@ import {
   getSizeKey,
 } from './utils/imageUtils';
 import { addWatermarkToCanvas } from './utils/watermarkUtils';
+import { embedExifMetadata } from './utils/exifUtils';
 import { generateInstructionsPdf } from './utils/pdfUtils';
 import { WatermarkSettings, CroppedImage, ProcessingProgress, ProcessingSettings, SourceImageInfo } from './types';
 
@@ -260,10 +261,28 @@ function App() {
               });
 
             const watermarkedCanvas = addWatermarkToCanvas(resizedCanvas, { ...settings, enabled: true });
-            const [watermarkedDataUrl, cleanDataUrl] = await Promise.all([
+            const [rawWatermarkedDataUrl, rawCleanDataUrl] = await Promise.all([
               canvasToDataUrl(watermarkedCanvas),
               canvasToDataUrl(resizedCanvas),
             ]);
+
+            const watermarkedDataUrl = embedExifMetadata(rawWatermarkedDataUrl, {
+              shopName: proc.shopName,
+              artTitle,
+              dpi,
+              width: watermarkedCanvas.width,
+              height: watermarkedCanvas.height,
+              variant: 'watermarked',
+            });
+
+            const cleanDataUrl = embedExifMetadata(rawCleanDataUrl, {
+              shopName: proc.shopName,
+              artTitle,
+              dpi,
+              width: resizedCanvas.width,
+              height: resizedCanvas.height,
+              variant: 'final',
+            });
 
             if (!watermarkedDataUrl || !cleanDataUrl) {
               throw new Error('Failed to serialize canvas to image data');
