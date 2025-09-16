@@ -1,21 +1,24 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { WatermarkSettings } from '../types';
 import { createWatermarkPreview } from '../utils/watermarkUtils';
+import { Panel } from './common/Panel';
+import { theme } from '../theme';
 
 interface WatermarkPreviewProps {
   originalCanvas: HTMLCanvasElement | null;
   settings: WatermarkSettings;
 }
 
-export const WatermarkPreview: React.FC<WatermarkPreviewProps> = ({
-  originalCanvas,
-  settings
-}) => {
+export function WatermarkPreview({ originalCanvas, settings }: WatermarkPreviewProps) {
   const previewDataUrl = useMemo(() => {
-    if (!originalCanvas || !settings.enabled) {
-      return originalCanvas?.toDataURL('image/jpeg', 0.8) || null;
+    if (!originalCanvas) {
+      return null;
     }
-    
+
+    if (!settings.enabled) {
+      return originalCanvas.toDataURL('image/jpeg', 0.8);
+    }
+
     try {
       return createWatermarkPreview(originalCanvas, settings);
     } catch (error) {
@@ -29,24 +32,20 @@ export const WatermarkPreview: React.FC<WatermarkPreviewProps> = ({
   }
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white rounded-lg shadow-md p-4">
-      <h4 className="text-lg font-medium text-gray-800 mb-3 text-center">
-        Watermark Preview
-      </h4>
-      <div className="relative">
-        <img
-          src={previewDataUrl}
-          alt="Watermark preview"
-          className="w-full h-auto rounded border border-gray-200 bg-gray-50"
-        />
+    <Panel title="Watermark preview" description="Preview based on the most recent upload." className="max-w-xl">
+      <div className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80">
+        <img src={previewDataUrl} alt="Watermark preview" className="w-full h-auto" />
         {!settings.enabled && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 rounded">
-            <span className="text-white text-sm font-medium bg-black bg-opacity-60 px-3 py-1 rounded">
-              Watermark Disabled
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-950/70">
+            <span className="rounded-full bg-slate-900/90 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-slate-200">
+              Watermark disabled
             </span>
           </div>
         )}
       </div>
-    </div>
+      <p className={`${theme.subheading} text-xs`}>Adjust settings to update this preview.</p>
+    </Panel>
   );
-};
+}
+
+export type { WatermarkPreviewProps };

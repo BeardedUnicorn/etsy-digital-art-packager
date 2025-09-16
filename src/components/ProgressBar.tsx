@@ -1,11 +1,12 @@
-import React from 'react';
 import { ProcessingProgress } from '../types';
+import { Panel } from './common/Panel';
+import { theme } from '../theme';
 
 interface ProgressBarProps {
   progress: ProcessingProgress;
 }
 
-export const ProgressBar: React.FC<ProgressBarProps> = ({ progress }) => {
+export function ProgressBar({ progress }: ProgressBarProps) {
   const percentage = progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0;
 
   if (!progress.total || progress.isComplete) {
@@ -13,34 +14,34 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ progress }) => {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
-      <div className="mb-4">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-700">
-            Processing Images
-          </span>
-          <span className="text-sm text-gray-500">
+    <Panel className="max-w-3xl" title="Processing" description="Generating all requested sizes. This can take a moment for large images.">
+      <div className="space-y-4">
+        <div className="flex items-center justify-between text-sm">
+          <span className={`${theme.subheading} font-medium`}>Progress</span>
+          <span className={`${theme.subheading}`}>
             {progress.current} of {progress.total}
           </span>
         </div>
-        
-        <div className="w-full bg-gray-200 rounded-full h-3">
+
+        <div className="h-3 w-full rounded-full bg-slate-800/80">
           <div
-            className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-300 ease-out"
+            className="h-3 rounded-full bg-gradient-to-r from-purple-500 via-indigo-500 to-sky-500 transition-all duration-300 ease-out"
             style={{ width: `${percentage}%` }}
           />
         </div>
-        
-        <div className="mt-2 text-center">
-          <p className="text-sm text-gray-600">{progress.currentTask}</p>
-          <p className="text-xs text-gray-500 mt-1">{percentage}% complete</p>
+
+        <div className={`text-sm ${theme.subheading}`}>
+          <p>{progress.currentTask}</p>
+          <p className="text-xs mt-1">{percentage}% complete</p>
+        </div>
+
+        <div className="flex items-center gap-3 text-sm text-slate-300">
+          <span className="inline-flex h-4 w-4 animate-spin rounded-full border-2 border-slate-600 border-t-slate-200" />
+          <span>Please keep this window open.</span>
         </div>
       </div>
-      
-      <div className="flex items-center justify-center space-x-2">
-        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-        <span className="text-sm text-gray-600">Please wait...</span>
-      </div>
-    </div>
+    </Panel>
   );
-};
+}
+
+export type { ProgressBarProps };

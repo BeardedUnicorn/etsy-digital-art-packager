@@ -1,17 +1,22 @@
-import React from 'react';
 import { CROP_RATIOS } from '../constants/cropRatios';
 import { ProcessingSettings } from '../types';
 import { getSizeKey } from '../utils/imageUtils';
+import { Panel } from './common/Panel';
+import { theme } from '../theme';
 
 interface OutputSettingsProps {
   settings: ProcessingSettings;
   onChange: (settings: ProcessingSettings) => void;
 }
 
-export const OutputSettings: React.FC<OutputSettingsProps> = ({ settings, onChange }) => {
+const rangeClass = 'w-full h-2 rounded-full appearance-none accent-purple-500 bg-slate-800/80';
+const inputClass = `${theme.input} rounded-xl px-4 py-2 transition-colors duration-200`;
+const smallInputClass = `${theme.input} rounded-lg px-3 py-2 text-sm transition-colors duration-200`;
+
+export function OutputSettings({ settings, onChange }: OutputSettingsProps) {
   const setJpegQuality = (value: number) => {
-    const q = Math.max(0.1, Math.min(1, value));
-    onChange({ ...settings, jpegQuality: q });
+    const quality = Math.max(0.1, Math.min(1, value));
+    onChange({ ...settings, jpegQuality: quality });
   };
 
   const setDefaultDpi = (value: number) => {
@@ -21,7 +26,7 @@ export const OutputSettings: React.FC<OutputSettingsProps> = ({ settings, onChan
 
   const setOverride = (key: string, value: number | '') => {
     const overrides = { ...settings.dpiOverrides };
-    if (value === '' || isNaN(Number(value))) {
+    if (value === '' || Number.isNaN(Number(value))) {
       delete overrides[key];
     } else {
       const dpi = Math.max(72, Math.min(2400, Math.round(Number(value))));
@@ -37,89 +42,97 @@ export const OutputSettings: React.FC<OutputSettingsProps> = ({ settings, onChan
   };
 
   return (
-    <div className="w-full mx-auto bg-white rounded-lg shadow-md p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-xl font-semibold text-gray-800">Output Settings</h3>
-          <p className="text-sm text-gray-600 mt-1">Configure JPEG quality and DPI per size</p>
-        </div>
-      </div>
-
+    <Panel
+      title="Output"
+      description="Control the quality and DPI for every generated size. Overrides are optional and fall back to the default DPI above."
+    >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1">
-          <label className="block text-sm font-medium text-gray-700 mb-2">JPEG Quality</label>
-          <div className="space-y-2">
+        <div>
+          <label className="block text-sm font-medium text-slate-200 mb-2">JPEG quality</label>
+          <div className="space-y-3">
             <input
               type="range"
               min={0.1}
               max={1}
               step={0.05}
               value={settings.jpegQuality}
-              onChange={(e) => setJpegQuality(parseFloat(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+              onChange={(event) => setJpegQuality(parseFloat(event.target.value))}
+              className={rangeClass}
             />
-            <div className="text-sm text-gray-700">
-              <span className="inline-block bg-gray-100 px-3 py-1 rounded font-medium">
-                {Math.round(settings.jpegQuality * 100)}%
-              </span>
-            </div>
+            <div className={`${theme.badge} rounded-full px-4 py-1 text-center inline-flex justify-center`}
+              >{Math.round(settings.jpegQuality * 100)}%</div>
           </div>
         </div>
 
         <div className="lg:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Default DPI</label>
-          <div className="flex items-center space-x-3">
+          <label className="block text-sm font-medium text-slate-200 mb-2">Default DPI</label>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <input
               type="number"
               min={72}
               max={2400}
               value={settings.defaultDpi}
-              onChange={(e) => setDefaultDpi(parseInt(e.target.value))}
-              className="w-40 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-gray-900"
+              onChange={(event) => setDefaultDpi(parseInt(event.target.value))}
+              className={`${inputClass} w-full sm:w-48`}
             />
-            <span className="text-sm text-gray-500">DPI used when no override is set</span>
+            <p className={`${theme.subheading} text-sm`}>Applied when no override exists.</p>
           </div>
         </div>
       </div>
 
-      <div className="mt-8">
-        <h4 className="text-lg font-medium text-gray-800 mb-4">Per-Size DPI Overrides</h4>
+      <div>
+        <h4 className="text-lg font-semibold text-slate-100 mb-4">Per-size DPI overrides</h4>
         <div className="space-y-6">
           {CROP_RATIOS.map((ratio) => (
-            <div key={ratio.name} className="border border-gray-200 rounded-lg">
-              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                <span className="font-medium text-gray-800">{ratio.name}</span>
-                <span className="text-sm text-gray-600">Target aspect: {ratio.ratio.toFixed(4)}</span>
+            <div
+              key={ratio.name}
+              className={`${theme.panelInset} rounded-2xl overflow-hidden`}
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-4 border-b border-slate-800/60">
+                <span className="text-sm font-semibold text-slate-200 uppercase tracking-wide">{ratio.name}</span>
+                <span className={`${theme.subheading} text-xs`}>Aspect ratio {ratio.ratio.toFixed(4)}</span>
               </div>
-              <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {ratio.sizes.map((size) => {
                   const key = getSizeKey(ratio.name, size.name);
                   const current = settings.dpiOverrides[key] ?? '';
+                  const hasOverride = key in settings.dpiOverrides;
                   return (
-                    <div key={key} className="flex items-center justify-between space-x-3 border border-gray-200 rounded-md p-3">
+                    <div
+                      key={key}
+                      className={`rounded-2xl border border-slate-800/60 bg-slate-900/70 p-4 flex flex-col gap-3`}
+                    >
                       <div>
-                        <div className="font-medium text-gray-800">{size.name}</div>
-                        <div className="text-xs text-gray-500">{size.width}×{size.height} {size.unit}</div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-semibold text-slate-100">{size.name}</span>
+                          {hasOverride && (
+                            <span className={`${theme.badgeAccent} px-2 py-0.5 rounded-full text-[10px] uppercase tracking-wide`}>
+                              override
+                            </span>
+                          )}
+                        </div>
+                        <p className={`${theme.subheading} text-xs mt-1`}>
+                          {size.width} × {size.height} {size.unit}
+                        </p>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-3">
                         <input
                           type="number"
                           placeholder={`${settings.defaultDpi}`}
                           value={current as number | ''}
                           min={72}
                           max={2400}
-                          onChange={(e) => {
-                            const v = e.target.value === '' ? '' : parseInt(e.target.value);
-                            setOverride(key, v as number | '');
+                          onChange={(event) => {
+                            const value = event.target.value === '' ? '' : parseInt(event.target.value);
+                            setOverride(key, value as number | '');
                           }}
-                          className="w-28 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white text-gray-900"
+                          className={`${smallInputClass} w-full`}
                         />
-                        {key in settings.dpiOverrides && (
+                        {hasOverride && (
                           <button
                             type="button"
                             onClick={() => clearOverride(key)}
-                            className="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded text-gray-800"
-                            title="Clear override"
+                            className={`${theme.subtleButton} px-3 py-1 rounded-lg text-xs font-medium text-slate-200`}
                           >
                             Clear
                           </button>
@@ -133,7 +146,8 @@ export const OutputSettings: React.FC<OutputSettingsProps> = ({ settings, onChan
           ))}
         </div>
       </div>
-    </div>
+    </Panel>
   );
-};
+}
 
+export type { OutputSettingsProps };

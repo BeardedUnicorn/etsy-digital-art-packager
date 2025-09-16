@@ -1,183 +1,193 @@
-import React from 'react';
-import { WatermarkSettings } from '../types';
+import { useMemo } from 'react';
+import type { WatermarkSettings } from '../types';
+import { Panel } from './common/Panel';
+import { theme } from '../theme';
 
-interface WatermarkSettingsProps {
+interface WatermarkSettingsFormProps {
   settings: WatermarkSettings;
   onChange: (settings: WatermarkSettings) => void;
 }
 
-export const WatermarkSettingsComponent: React.FC<WatermarkSettingsProps> = ({
-  settings,
-  onChange
-}) => {
-  const toggleEnabled = () => {
+const inputBase = `${theme.input} w-full rounded-xl px-4 py-2 transition-colors duration-200`;
+const smallInput = `${theme.input} w-full rounded-lg px-3 py-2 text-sm transition-colors duration-200`;
+const sliderClass = 'w-full h-2 rounded-full appearance-none accent-purple-500 bg-slate-800/80';
+const badgeClass = `${theme.badge} inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium`; 
+
+export function WatermarkSettingsForm({ settings, onChange }: WatermarkSettingsFormProps) {
+  const watermarkEnabledLabel = useMemo(
+    () => (settings.enabled ? 'Watermark enabled' : 'Watermark disabled'),
+    [settings.enabled],
+  );
+
+  const handleToggle = () => {
     onChange({ ...settings, enabled: !settings.enabled });
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto bg-white rounded-lg shadow-md p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className="text-xl font-semibold text-gray-800">Watermark Settings</h3>
-          <p className="text-sm text-gray-600 mt-1">Customize your watermark appearance - preview updates in real-time</p>
-        </div>
-        <label className="flex items-center space-x-3 cursor-pointer">
-          <span className="text-sm font-medium text-gray-700">Enable Watermark</span>
-          <button
-            type="button"
-            onClick={toggleEnabled}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-              settings.enabled ? 'bg-blue-600' : 'bg-gray-300'
+    <Panel
+      title="Watermark"
+      description="Configure watermark appearance and behaviour. These settings will be applied to every generated output."
+      headerAction={
+        <button
+          type="button"
+          onClick={handleToggle}
+          className={`relative inline-flex h-9 w-16 items-center rounded-full border border-slate-700/70 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-950 ${
+            settings.enabled ? 'bg-purple-500/30' : 'bg-slate-800'
+          }`}
+          aria-pressed={settings.enabled}
+        >
+          <span
+            className={`inline-block h-7 w-7 transform rounded-full bg-slate-200 text-slate-900 text-xs font-semibold leading-7 text-center transition-transform ${
+              settings.enabled ? 'translate-x-7' : 'translate-x-1'
             }`}
           >
-            <span
-              className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                settings.enabled ? 'translate-x-5' : 'translate-x-0.5'
-              }`}
-            />
-          </button>
-        </label>
-      </div>
+            {settings.enabled ? 'ON' : 'OFF'}
+          </span>
+          <span className="sr-only">Toggle watermark</span>
+        </button>
+      }
+    >
+      <p className={`${theme.subheading} text-sm -mt-2`}>{watermarkEnabledLabel}</p>
 
       {settings.enabled && (
-        <div className="space-y-6">
+        <div className="space-y-8">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Watermark Text</label>
+            <label className="block text-sm font-medium text-slate-200 mb-2">Watermark text</label>
             <input
               type="text"
               value={settings.text}
-              onChange={(e) => onChange({ ...settings, text: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white text-gray-900"
-              placeholder="Enter watermark text"
+              onChange={(event) => onChange({ ...settings, text: event.target.value })}
+              className={inputBase}
+              placeholder="© Your Name"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Opacity
-              </label>
-              <div className="space-y-2">
+              <label className="block text-sm font-medium text-slate-200 mb-2">Opacity</label>
+              <div className="space-y-3">
                 <input
                   type="range"
                   min="0"
                   max="1"
                   step="0.1"
                   value={settings.opacity}
-                  onChange={(e) => onChange({ ...settings, opacity: parseFloat(e.target.value) })}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                  onChange={(event) =>
+                    onChange({ ...settings, opacity: parseFloat(event.target.value) })
+                  }
+                  className={sliderClass}
                 />
-                <div className="text-center">
-                  <span className="inline-block bg-gray-100 px-3 py-1 rounded text-sm font-medium text-gray-700">
-                    {Math.round(settings.opacity * 100)}%
-                  </span>
-                </div>
+                <div className={`${badgeClass} justify-center w-full`}>{Math.round(settings.opacity * 100)}%</div>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Base Font Size</label>
+              <label className="block text-sm font-medium text-slate-200 mb-2">Base font size</label>
               <div className="relative">
                 <input
                   type="number"
                   min="12"
                   max="200"
                   value={settings.fontSize}
-                  onChange={(e) => onChange({ ...settings, fontSize: parseInt(e.target.value) || 12 })}
-                  className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white text-gray-900"
+                  onChange={(event) =>
+                    onChange({ ...settings, fontSize: parseInt(event.target.value) || 12 })
+                  }
+                  className={`${inputBase} pr-12`}
                 />
-                <span className="absolute right-3 top-2.5 text-sm text-gray-500">px</span>
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs uppercase tracking-wide text-slate-400">
+                  px
+                </span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">Auto-scales with image size</p>
+              <p className={`${theme.muted} text-xs mt-2`}>Automatically scales with image size.</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
+              <label className="block text-sm font-medium text-slate-200 mb-2">Position</label>
               <select
                 value={settings.position}
-                onChange={(e) =>
+                onChange={(event) =>
                   onChange({
                     ...settings,
-                    position: e.target.value as WatermarkSettings['position'],
+                    position: event.target.value as WatermarkSettings['position'],
                   })
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white text-gray-900"
+                className={`${inputBase} pr-10`}
               >
-                <option value="top-left">Top Left</option>
-                <option value="top-right">Top Right</option>
-                <option value="bottom-left">Bottom Left</option>
-                <option value="bottom-right">Bottom Right</option>
+                <option value="top-left">Top left</option>
+                <option value="top-right">Top right</option>
+                <option value="bottom-left">Bottom left</option>
+                <option value="bottom-right">Bottom right</option>
                 <option value="center">Center</option>
-                <option value="repeat">Repeat Pattern</option>
+                <option value="repeat">Repeat pattern</option>
               </select>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Color</label>
-              <div className="flex space-x-3">
+              <label className="block text-sm font-medium text-slate-200 mb-2">Color</label>
+              <div className="flex items-center gap-3">
                 <input
                   type="color"
                   value={settings.color}
-                  onChange={(e) => onChange({ ...settings, color: e.target.value })}
-                  className="w-12 h-10 border border-gray-300 rounded-lg cursor-pointer"
+                  onChange={(event) => onChange({ ...settings, color: event.target.value })}
+                  className="h-12 w-14 rounded-xl border border-slate-700 bg-transparent"
                 />
                 <input
                   type="text"
                   value={settings.color}
-                  onChange={(e) => onChange({ ...settings, color: e.target.value })}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-mono text-sm bg-white text-gray-900"
-                  placeholder="#ffffff"
+                  onChange={(event) => onChange({ ...settings, color: event.target.value })}
+                  className={`${inputBase} font-mono text-xs uppercase tracking-wide`}
+                  placeholder="#FFFFFF"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {settings.position === 'repeat' ? 'Rotation Angle' : 'Margin Settings'}
+              <label className="block text-sm font-medium text-slate-200 mb-2">
+                {settings.position === 'repeat' ? 'Rotation angle' : 'Margins'}
               </label>
               {settings.position === 'repeat' ? (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <input
                     type="range"
                     min="-90"
                     max="90"
                     step="5"
                     value={settings.rotation || 0}
-                    onChange={(e) => onChange({ ...settings, rotation: parseInt(e.target.value) })}
-                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                    onChange={(event) =>
+                      onChange({ ...settings, rotation: parseInt(event.target.value) })
+                    }
+                    className={sliderClass}
                   />
-                  <div className="text-center">
-                    <span className="inline-block bg-gray-100 px-3 py-1 rounded text-sm font-medium text-gray-700">
-                      {settings.rotation || 0}°
-                    </span>
-                  </div>
+                  <div className={`${badgeClass} justify-center w-full`}>{settings.rotation || 0}°</div>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">Horizontal</label>
+                    <label className={`${theme.subheading} text-xs mb-1 block`}>Horizontal</label>
                     <input
                       type="number"
                       min="0"
                       max="200"
                       value={settings.marginX}
-                      onChange={(e) => onChange({ ...settings, marginX: parseInt(e.target.value) || 0 })}
-                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
-                      placeholder="20"
+                      onChange={(event) =>
+                        onChange({ ...settings, marginX: parseInt(event.target.value) || 0 })
+                      }
+                      className={smallInput}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">Vertical</label>
+                    <label className={`${theme.subheading} text-xs mb-1 block`}>Vertical</label>
                     <input
                       type="number"
                       min="0"
                       max="200"
                       value={settings.marginY}
-                      onChange={(e) => onChange({ ...settings, marginY: parseInt(e.target.value) || 0 })}
-                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white text-gray-900"
-                      placeholder="20"
+                      onChange={(event) =>
+                        onChange({ ...settings, marginY: parseInt(event.target.value) || 0 })
+                      }
+                      className={smallInput}
                     />
                   </div>
                 </div>
@@ -188,44 +198,50 @@ export const WatermarkSettingsComponent: React.FC<WatermarkSettingsProps> = ({
           {settings.position === 'repeat' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Horizontal Spacing
-                </label>
+                <label className="block text-sm font-medium text-slate-200 mb-2">Horizontal spacing</label>
                 <div className="relative">
                   <input
                     type="number"
                     min="0"
                     max="500"
                     value={settings.marginX}
-                    onChange={(e) => onChange({ ...settings, marginX: parseInt(e.target.value) || 0 })}
-                    className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white text-gray-900"
+                    onChange={(event) =>
+                      onChange({ ...settings, marginX: parseInt(event.target.value) || 0 })
+                    }
+                    className={`${inputBase} pr-12`}
                   />
-                  <span className="absolute right-3 top-2.5 text-sm text-gray-500">px</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs uppercase tracking-wide text-slate-400">
+                    px
+                  </span>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Space between text horizontally</p>
+                <p className={`${theme.muted} text-xs mt-2`}>Distance between repeated text horizontally.</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Vertical Spacing
-                </label>
+                <label className="block text-sm font-medium text-slate-200 mb-2">Vertical spacing</label>
                 <div className="relative">
                   <input
                     type="number"
                     min="0"
                     max="500"
                     value={settings.marginY}
-                    onChange={(e) => onChange({ ...settings, marginY: parseInt(e.target.value) || 0 })}
-                    className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white text-gray-900"
+                    onChange={(event) =>
+                      onChange({ ...settings, marginY: parseInt(event.target.value) || 0 })
+                    }
+                    className={`${inputBase} pr-12`}
                   />
-                  <span className="absolute right-3 top-2.5 text-sm text-gray-500">px</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs uppercase tracking-wide text-slate-400">
+                    px
+                  </span>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Space between text vertically</p>
+                <p className={`${theme.muted} text-xs mt-2`}>Distance between rows in the pattern.</p>
               </div>
             </div>
           )}
         </div>
       )}
-    </div>
+    </Panel>
   );
-};
+}
+
+export type { WatermarkSettingsFormProps };
