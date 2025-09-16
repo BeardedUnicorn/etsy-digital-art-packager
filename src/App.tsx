@@ -563,7 +563,6 @@ function App() {
             downloadLink={downloadLink}
             onArtTitleChange={setArtTitle}
             onDownloadLinkChange={setDownloadLink}
-            onOpenSettings={() => setActivePage('settings')}
           />
         ) : (
           <SettingsPage

@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { CROP_RATIOS } from '../constants/cropRatios';
 import { FileUpload } from '../components/FileUpload';
 import { PageHeader } from '../components/common/PageHeader';
@@ -7,7 +6,6 @@ import { ImagePreview } from '../components/ImagePreview';
 import { WatermarkPreview } from '../components/WatermarkPreview';
 import { Panel } from '../components/common/Panel';
 import { EmptyState } from '../components/common/EmptyState';
-import { classNames } from '../utils/classNames';
 import { theme } from '../theme';
 import type { CroppedImage, ProcessingProgress, SourceImageInfo, WatermarkSettings } from '../types';
 
@@ -31,7 +29,6 @@ interface GeneratorPageProps {
   downloadLink: string;
   onArtTitleChange: (title: string) => void;
   onDownloadLinkChange: (link: string) => void;
-  onOpenSettings: () => void;
 }
 
 export function GeneratorPage({
@@ -54,7 +51,6 @@ export function GeneratorPage({
   downloadLink,
   onArtTitleChange,
   onDownloadLinkChange,
-  onOpenSettings,
 }: GeneratorPageProps) {
   const totalSizes = CROP_RATIOS.reduce((sum, ratio) => sum + ratio.sizes.length, 0);
   const totalVariants = totalSizes * 2;
@@ -75,56 +71,6 @@ export function GeneratorPage({
   const exampleWatermarked = `${exampleBase}_wm.jpg`;
   const exampleFinal = `${exampleBase}_final.jpg`;
 
-  type StepKey = 'upload' | 'settings' | 'generate' | 'download';
-  const steps: Array<{
-    key: StepKey;
-    title: string;
-    description: string;
-    hint?: string;
-    complete: boolean;
-  }> = [
-    {
-      key: 'upload',
-      title: 'Upload image',
-      description: 'Drag and drop a single high-resolution JPG or PNG.',
-      hint: sourceInfo
-        ? `${sourceInfo.width.toLocaleString()} × ${sourceInfo.height.toLocaleString()} px`
-        : 'Recommended: 600 DPI or higher',
-      complete: hasImage,
-    },
-    {
-      key: 'settings',
-      title: 'Review settings',
-      description: 'Adjust watermark and output defaults before generating.',
-      hint: 'Watermark applied automatically; final copies included.',
-      complete: hasResults,
-    },
-    {
-      key: 'generate',
-      title: 'Generate outputs',
-      description: `${totalSizes} sizes export as watermarked and final files locally.`,
-      complete: hasResults,
-    },
-    {
-      key: 'download',
-      title: 'Download files',
-      description: 'Save assets individually or export them all at once.',
-      complete: false,
-    },
-  ];
-
-  let activeAssigned = false;
-  const computedSteps = steps.map((step) => {
-    if (step.complete) {
-      return { ...step, status: 'complete' as const };
-    }
-    if (!activeAssigned) {
-      activeAssigned = true;
-      return { ...step, status: 'active' as const };
-    }
-    return { ...step, status: 'upcoming' as const };
-  });
-
   return (
     <div className="space-y-10">
       {showStickyProgress && (
@@ -139,82 +85,6 @@ export function GeneratorPage({
         title="Generate print-ready crops"
         subtitle="Upload a high-resolution source image, then automatically produce cropped outputs across every supported ratio and size."
       />
-
-      <Panel
-        title="Workflow"
-        description="Stay on track with these quick steps for producing exports."
-      >
-        <ol className="space-y-3">
-          {computedSteps.map((step, index) => {
-            const status = step.status;
-            const containerClasses = classNames(
-              'flex flex-col gap-4 rounded-2xl border border-slate-800/60 bg-slate-900/60 p-4 sm:flex-row sm:items-center sm:justify-between',
-              status === 'active' && 'border-purple-500/40 shadow-lg shadow-purple-900/30',
-              status === 'complete' && 'border-emerald-500/30',
-            );
-            const indicatorClasses = classNames(
-              'flex h-9 w-9 items-center justify-center rounded-full border text-sm font-semibold transition-colors',
-              status === 'complete' && 'border-emerald-500 text-emerald-200 bg-emerald-500/10',
-              status === 'active' && 'border-purple-500 text-purple-200 bg-purple-500/10',
-              status === 'upcoming' && 'border-slate-700 text-slate-500',
-            );
-            const indicatorContent =
-              status === 'complete' ? (
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              ) : (
-                index + 1
-              );
-
-            let action: ReactNode = null;
-            if (step.key === 'settings') {
-              action = (
-                <button
-                  type="button"
-                  onClick={onOpenSettings}
-                  className={`${theme.subtleButton} rounded-xl px-4 py-2 text-sm font-semibold text-slate-200 hover:scale-[1.01] transition-transform`}
-                >
-                  Open settings
-                </button>
-              );
-            } else if (step.key === 'download' && hasResults) {
-              action = (
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={onPreviewAll}
-                    className={`${theme.subtleButton} rounded-xl px-4 py-2 text-sm font-semibold text-slate-200 hover:scale-[1.01] transition-transform`}
-                  >
-                    Preview gallery
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onDownloadAll}
-                    className={`${theme.accentButton} rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-purple-900/40 transition-transform hover:scale-[1.01]`}
-                  >
-                    Download all
-                  </button>
-                </div>
-              );
-            }
-
-            return (
-              <li key={step.key} className={containerClasses}>
-                <div className="flex items-start gap-4">
-                  <span className={indicatorClasses}>{indicatorContent}</span>
-                  <div className="space-y-1">
-                    <p className="text-base font-semibold text-slate-100">{step.title}</p>
-                    <p className={classNames('text-sm', theme.subheading)}>{step.description}</p>
-                    {step.hint && <p className="text-xs text-slate-500">{step.hint}</p>}
-                  </div>
-                </div>
-                {action && <div className="sm:self-center">{action}</div>}
-              </li>
-            );
-          })}
-        </ol>
-      </Panel>
 
       <Panel
         title="Artwork details"
