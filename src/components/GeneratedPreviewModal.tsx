@@ -50,7 +50,7 @@ export function GeneratedPreviewModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 px-4 py-6 sm:py-8"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 px-3 py-4 sm:px-4 sm:py-6"
       role="dialog"
       aria-modal="true"
       onClick={handleBackdropClick}
@@ -58,8 +58,7 @@ export function GeneratedPreviewModal({
       <div
         className={classNames(
           theme.panel,
-          'relative flex w-full max-w-5xl flex-col overflow-hidden rounded-3xl p-6 shadow-2xl shadow-black/60',
-          'max-h-[calc(100vh-3rem)] sm:max-h-[calc(100vh-4rem)]',
+          'relative flex h-full max-h-[calc(100vh-2rem)] w-full max-w-5xl flex-col overflow-hidden rounded-3xl p-4 sm:p-6 shadow-2xl shadow-black/60',
         )}
         onClick={handleDialogClick}
       >
@@ -97,7 +96,7 @@ export function GeneratedPreviewModal({
           </div>
         </header>
 
-        <div className="mt-6 flex flex-1 items-center justify-center gap-4 overflow-hidden">
+        <div className="mt-4 flex flex-1 items-center justify-center gap-3 overflow-hidden sm:mt-6 sm:gap-4">
           {hasMultiple && (
             <button
               type="button"
@@ -111,9 +110,9 @@ export function GeneratedPreviewModal({
             </button>
           )}
 
-          <div className="relative flex w-full max-w-3xl items-center justify-center overflow-hidden rounded-3xl border border-slate-800 bg-slate-950">
-            <div className="flex max-h-[55vh] w-full items-center justify-center p-4">
-              <img src={image.dataUrl} alt={image.name} className="max-h-full w-auto max-w-full object-contain" />
+          <div className="relative flex h-full w-full max-w-3xl flex-1 items-center justify-center overflow-hidden rounded-3xl border border-slate-800 bg-slate-950">
+            <div className="flex max-h-full w-full items-center justify-center p-4">
+              <img src={image.dataUrl} alt={image.name} className="max-h-[calc(100vh-14rem)] w-auto max-w-full object-contain" />
             </div>
             {hasMultiple && (
               <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 rounded-full bg-slate-950/80 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-slate-200">
@@ -137,7 +136,7 @@ export function GeneratedPreviewModal({
         </div>
 
         {hasMultiple && (
-          <div className="mt-6 flex max-h-24 gap-2 overflow-x-auto pb-2">
+          <div className="mt-4 flex max-h-24 gap-2 overflow-x-auto pb-2 sm:mt-6">
             {images.map((thumb, index) => {
               const isActive = index === clampedIndex;
               return (
