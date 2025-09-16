@@ -60,6 +60,7 @@ export function GeneratorPage({
   const totalVariants = totalSizes * 2;
   const hasImage = Boolean(originalImage);
   const hasResults = croppedImages.length > 0;
+  const showStickyProgress = !progress.isComplete && progress.total > 0;
   const sanitizeSegment = (value: string) =>
     value
       .replace(/×/g, 'x')
@@ -126,6 +127,14 @@ export function GeneratorPage({
 
   return (
     <div className="space-y-10">
+      {showStickyProgress && (
+        <div className="sticky top-0 z-30 -mx-4 -mt-10 border-b border-slate-900/70 bg-slate-950/90 px-4 py-5 backdrop-blur sm:-mx-8 sm:px-8 lg:-mx-12 lg:px-12">
+          <div className="mx-auto max-w-5xl">
+            <ProgressBar progress={progress} />
+          </div>
+        </div>
+      )}
+
       <PageHeader
         title="Generate print-ready crops"
         subtitle="Upload a high-resolution source image, then automatically produce cropped outputs across every supported ratio and size."
@@ -300,8 +309,6 @@ export function GeneratorPage({
           <WatermarkPreview originalCanvas={originalImage} settings={watermarkSettings} />
         </div>
       )}
-
-      {processing && <ProgressBar progress={progress} />}
 
       {!processing && hasImage && !hasResults && (
         <EmptyState

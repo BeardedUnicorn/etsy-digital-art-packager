@@ -14,7 +14,7 @@ export function ProgressBar({ progress }: ProgressBarProps) {
   }
 
   return (
-    <Panel className="max-w-3xl" title="Processing" description="Generating all requested sizes. This can take a moment for large images.">
+    <Panel className="mx-auto w-full max-w-3xl" title="Processing" description="Generating all requested sizes. This can take a moment for large images.">
       <div className="space-y-4">
         <div className="flex items-center justify-between text-sm">
           <span className={`${theme.subheading} font-medium`}>Progress</span>
