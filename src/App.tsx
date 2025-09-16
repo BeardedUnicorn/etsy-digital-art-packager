@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { FileUpload } from './components/FileUpload';
 import { WatermarkSettingsComponent } from './components/WatermarkSettings';
@@ -6,7 +6,7 @@ import { WatermarkPreview } from './components/WatermarkPreview';
 import { ImagePreview } from './components/ImagePreview';
 import { ProgressBar } from './components/ProgressBar';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { CROP_RATIOS, DPI } from './constants/cropRatios';
+import { CROP_RATIOS } from './constants/cropRatios';
 import {
   loadImageFromFile,
   imageToCanvas,
