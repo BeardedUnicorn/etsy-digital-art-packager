@@ -8,7 +8,7 @@ import {
   degrees,
   rgb,
 } from 'pdf-lib';
-import type { PDFFont, PDFImage } from 'pdf-lib';
+import type { PDFFont } from 'pdf-lib';
 
 export interface PdfRatioSummary {
   ratioName: string;
@@ -70,7 +70,6 @@ const dataUrlToUint8Array = (dataUrl: string) => {
 export async function generateInstructionsPdf(options: GenerateInstructionsPdfOptions): Promise<Uint8Array> {
   const {
     shopName,
-    shopLogoDataUrl,
     artTitle,
     downloadLink,
     ratios,
@@ -96,23 +95,6 @@ export async function generateInstructionsPdf(options: GenerateInstructionsPdfOp
   const titleFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   const bodyFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const italicFont = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
-
-  const normalizedLogoDataUrl = shopLogoDataUrl?.trim() || null;
-  let shopLogoImage: PDFImage | null = null;
-  let shopLogoDimensions: { width: number; height: number } | null = null;
-
-  if (normalizedLogoDataUrl) {
-    try {
-      const logoBytes = dataUrlToUint8Array(normalizedLogoDataUrl);
-      const logoIsPng = normalizedLogoDataUrl.startsWith('data:image/png');
-      const embeddedLogo = logoIsPng ? await pdfDoc.embedPng(logoBytes) : await pdfDoc.embedJpg(logoBytes);
-      const dimensions = embeddedLogo.scaleToFit(160, 60);
-      shopLogoImage = embeddedLogo;
-      shopLogoDimensions = dimensions;
-    } catch (error) {
-      console.warn('Failed to embed shop logo in PDF', error);
-    }
-  }
 
   const HERO_HEIGHT = 188;
   const FOOTER_HEIGHT = 72;
@@ -249,45 +231,6 @@ export async function generateInstructionsPdf(options: GenerateInstructionsPdfOp
       });
       headerCursor -= 18;
     }
-
-    const shopNameFontSize = withHero ? 13 : 11;
-    const shopRowBaseline = headerCursor;
-    let shopRowX = PAGE_MARGIN;
-    const rowCenter = shopRowBaseline + shopNameFontSize / 2;
-
-    if (shopLogoImage && shopLogoDimensions) {
-      const targetHeight = withHero ? 34 : 26;
-      const height = Math.min(targetHeight, shopLogoDimensions.height);
-      const width = (shopLogoDimensions.width / shopLogoDimensions.height) * height;
-      const logoY = rowCenter - height / 2;
-
-      page.drawRectangle({
-        x: shopRowX - 8,
-        y: logoY - 4,
-        width: width + 16,
-        height: height + 8,
-        color: palette.background.mist,
-        opacity: 0.75,
-        borderColor: palette.border.strong,
-        borderWidth: 0.5,
-      });
-      page.drawImage(shopLogoImage, {
-        x: shopRowX,
-        y: logoY,
-        width,
-        height,
-      });
-      shopRowX += width + 14;
-    }
-
-    page.drawText(displayShopName, {
-      x: shopRowX,
-      y: shopRowBaseline,
-      size: shopNameFontSize,
-      font: titleFont,
-      color: palette.text.onAccent,
-    });
-    headerCursor = shopRowBaseline - shopNameFontSize - 12;
 
     page.drawRectangle({
       x: 0,
