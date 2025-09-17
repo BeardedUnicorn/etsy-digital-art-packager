@@ -37,6 +37,9 @@ const defaultProcessingSettings: ProcessingSettings = {
   dpiOverrides: {},
   shopName: '',
   shopLogoDataUrl: null,
+  instructionsFooterTagline: '',
+  instructionsThankYouMessage:
+    'Thank you for supporting Sacred Realms Studio. Your purchase nurtures immersive art for mindful, modern sanctuaries.\nWith gratitude, The Sacred Realms Studio team',
 };
 
 const navigationConfig: NavigationItem[] = [
@@ -134,17 +137,30 @@ function App() {
 
 
   useEffect(() => {
-    if (
-      processingSettings.shopName === undefined ||
-      processingSettings.shopLogoDataUrl === undefined
-    ) {
-      setProcessingSettings((prev) => ({
-        ...prev,
-        shopName: prev.shopName ?? '',
-        shopLogoDataUrl: prev.shopLogoDataUrl ?? null,
-      }));
-    }
-  }, [processingSettings.shopLogoDataUrl, processingSettings.shopName, setProcessingSettings]);
+    setProcessingSettings((prev) => {
+      const next = { ...prev } as ProcessingSettings;
+      let changed = false;
+
+      if (prev.shopName === undefined) {
+        next.shopName = '';
+        changed = true;
+      }
+      if (prev.shopLogoDataUrl === undefined) {
+        next.shopLogoDataUrl = null;
+        changed = true;
+      }
+      if (prev.instructionsFooterTagline === undefined) {
+        next.instructionsFooterTagline = defaultProcessingSettings.instructionsFooterTagline;
+        changed = true;
+      }
+      if (prev.instructionsThankYouMessage === undefined) {
+        next.instructionsThankYouMessage = defaultProcessingSettings.instructionsThankYouMessage;
+        changed = true;
+      }
+
+      return changed ? next : prev;
+    });
+  }, [setProcessingSettings]);
 
   useEffect(() => {
     if (!watermarkSettings.enabled) {
@@ -483,6 +499,8 @@ function App() {
         downloadLink,
         ratios: ratioSummaries,
         previewImageDataUrl: previewCandidate?.dataUrl ?? null,
+        footerTagline: processingSettings.instructionsFooterTagline,
+        thankYouMessage: processingSettings.instructionsThankYouMessage,
       });
     } catch (pdfError) {
       console.error('Error creating instructions PDF:', pdfError);
@@ -534,8 +552,10 @@ function App() {
     artTitle,
     croppedImages,
     downloadLink,
-    processingSettings.shopName,
+    processingSettings.instructionsFooterTagline,
+    processingSettings.instructionsThankYouMessage,
     processingSettings.shopLogoDataUrl,
+    processingSettings.shopName,
   ]);
 
   const openPreviewAt = useCallback((index: number) => {
