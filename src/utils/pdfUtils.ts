@@ -22,6 +22,8 @@ interface GenerateInstructionsPdfOptions {
   downloadLink: string;
   ratios: PdfRatioSummary[];
   previewImageDataUrl?: string | null;
+  footerTagline?: string;
+  thankYouMessage?: string;
 }
 
 const PAGE_WIDTH = 612;
@@ -73,16 +75,23 @@ export async function generateInstructionsPdf(options: GenerateInstructionsPdfOp
     downloadLink,
     ratios,
     previewImageDataUrl,
+    footerTagline,
+    thankYouMessage,
   } = options;
 
   const pdfDoc = await PDFDocument.create();
 
   const brandIdentity = 'Sacred Realms Studio';
   const brandTagline = 'Ethereal print experiences for tranquil homes';
-  const brandUrl = 'sacredrealms.studio';
   const displayShopName = shopName.trim() || brandIdentity;
   const artLabel = artTitle.trim();
   pdfDoc.setTitle(`${brandIdentity} – Digital Download Guide`);
+
+  const normalizedFooterTagline = footerTagline?.trim() ?? '';
+  const gratitudeLines = (thankYouMessage ?? '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
 
   const titleFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   const bodyFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -229,15 +238,6 @@ export async function generateInstructionsPdf(options: GenerateInstructionsPdfOp
         color: palette.text.muted,
       });
       headerCursor -= 16;
-
-      page.drawText('Prepared for', {
-        x: PAGE_MARGIN,
-        y: headerCursor,
-        size: 9,
-        font: bodyFont,
-        color: palette.text.muted,
-      });
-      headerCursor -= 14;
     } else {
       const compactSubtitle = artLabel || 'Download guide overview';
       page.drawText(compactSubtitle, {
@@ -306,7 +306,7 @@ export async function generateInstructionsPdf(options: GenerateInstructionsPdfOp
       opacity: 0.35,
     });
 
-    const footerPrimary = `${brandIdentity}  •  ${brandUrl}`;
+    const footerPrimary = displayShopName;
     page.drawText(footerPrimary, {
       x: PAGE_MARGIN,
       y: 26,
@@ -314,13 +314,15 @@ export async function generateInstructionsPdf(options: GenerateInstructionsPdfOp
       font: bodyFont,
       color: palette.text.muted,
     });
-    page.drawText('Crafted for intentional interior styling', {
-      x: PAGE_MARGIN,
-      y: 12,
-      size: 8,
-      font: italicFont,
-      color: palette.text.muted,
-    });
+    if (normalizedFooterTagline) {
+      page.drawText(normalizedFooterTagline, {
+        x: PAGE_MARGIN,
+        y: 12,
+        size: 8,
+        font: italicFont,
+        color: palette.text.muted,
+      });
+    }
     const pageNumberLabel = `Page ${pageNumber}`;
     const pageNumberWidth = bodyFont.widthOfTextAtSize(pageNumberLabel, 9);
     page.drawText(pageNumberLabel, {
@@ -786,20 +788,7 @@ export async function generateInstructionsPdf(options: GenerateInstructionsPdfOp
         color: palette.text.muted,
         spacingAfter: 6,
       });
-      drawParagraph('Tip: Save your files locally before sharing them with collectors or print partners.', {
-        font: italicFont,
-        size: 11,
-        color: palette.text.muted,
-        lineHeight: 16,
-        spacingAfter: 12,
-      });
-      drawParagraph('Share this link with customers only after verifying the contents of the download.', {
-        font: bodyFont,
-        size: 11,
-        color: palette.text.muted,
-        lineHeight: 16,
-        spacingAfter: 18,
-      });
+      cursorY -= 12;
     } else {
       drawCallout(trimmedLink);
     }
@@ -813,20 +802,18 @@ export async function generateInstructionsPdf(options: GenerateInstructionsPdfOp
     });
   }
 
-  drawDivider(contentWidth);
-  drawParagraph('Thank you for supporting Sacred Realms Studio. Your purchase nurtures immersive art for mindful, modern sanctuaries.', {
-    font: italicFont,
-    size: 11,
-    color: palette.text.muted,
-    lineHeight: 16,
-    spacingAfter: 6,
-  });
-  drawParagraph('With gratitude, The Sacred Realms Studio team', {
-    font: italicFont,
-    size: 11,
-    color: palette.text.muted,
-    spacingAfter: 0,
-  });
+  if (gratitudeLines.length > 0) {
+    drawDivider(contentWidth);
+    gratitudeLines.forEach((line, index) => {
+      drawParagraph(line, {
+        font: italicFont,
+        size: 11,
+        color: palette.text.muted,
+        lineHeight: 16,
+        spacingAfter: index === gratitudeLines.length - 1 ? 0 : 6,
+      });
+    });
+  }
 
   return pdfDoc.save();
 }

@@ -55,6 +55,10 @@ export interface ProcessingSettings {
   shopName: string;
   // Optional data URL representing the shop logo for branded documents
   shopLogoDataUrl: string | null;
+  // Optional tagline displayed beneath the shop name in the PDF footer
+  instructionsFooterTagline: string;
+  // Customizable closing copy shown at the end of the instructions PDF
+  instructionsThankYouMessage: string;
 }
 
 export interface SourceImageInfo {

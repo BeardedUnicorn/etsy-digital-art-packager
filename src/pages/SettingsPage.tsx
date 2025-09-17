@@ -37,6 +37,8 @@ export function SettingsPage({
   const filenameExampleParts = [sanitizedShopName || 'shop', 'portrait', '8x10_wm'];
   const filenameExample = filenameExampleParts.filter(Boolean).join('_');
   const shopLogoDataUrl = processingSettings.shopLogoDataUrl ?? null;
+  const footerTagline = processingSettings.instructionsFooterTagline ?? '';
+  const thankYouMessage = processingSettings.instructionsThankYouMessage ?? '';
 
   const handleShopNameChange = (value: string) => {
     const sanitized = value.replace(/\s+/g, '');
@@ -82,6 +84,14 @@ export function SettingsPage({
 
   const handleClearShopLogo = () => {
     onProcessingChange({ ...processingSettings, shopLogoDataUrl: null });
+  };
+
+  const handleFooterTaglineChange = (value: string) => {
+    onProcessingChange({ ...processingSettings, instructionsFooterTagline: value });
+  };
+
+  const handleThankYouMessageChange = (value: string) => {
+    onProcessingChange({ ...processingSettings, instructionsThankYouMessage: value });
   };
 
   return (
@@ -197,9 +207,48 @@ export function SettingsPage({
             className="block w-full text-sm text-slate-200 file:mr-4 file:rounded-lg file:border-0 file:bg-purple-500/70 file:px-4 file:py-2 file:font-semibold file:text-slate-100 hover:file:bg-purple-500/60"
           />
         </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-slate-200" htmlFor="pdf-footer-tagline">
+            PDF footer tagline
+          </label>
+          <input
+            id="pdf-footer-tagline"
+            type="text"
+            value={footerTagline}
+            onChange={(event) => handleFooterTaglineChange(event.target.value)}
+            className={`${theme.input} w-full rounded-xl px-4 py-2 transition-colors duration-200`}
+            placeholder="Optional. Example: Curated prints for calm spaces"
+          />
+          <p className={`${theme.subheading} text-xs`}>
+            Leave blank to display only your shop name in the PDF footer.
+          </p>
+        </div>
       </Panel>
 
       <WatermarkSettingsForm settings={{ ...watermarkSettings, enabled: true }} onChange={onWatermarkChange} />
+
+      <Panel
+        title="PDF messaging"
+        description="Customize the closing note that appears at the end of the instructions PDF."
+      >
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-slate-200" htmlFor="pdf-thank-you-message">
+            Thank-you message
+          </label>
+          <textarea
+            id="pdf-thank-you-message"
+            rows={5}
+            value={thankYouMessage}
+            onChange={(event) => handleThankYouMessageChange(event.target.value)}
+            className={`${theme.input} w-full rounded-xl px-4 py-3 transition-colors duration-200 min-h-[140px]`}
+            placeholder="Share a personalized note of gratitude with your customers."
+          />
+          <p className={`${theme.subheading} text-xs`}>
+            Use line breaks to create separate paragraphs. This text replaces the default gratitude copy in the PDF.
+          </p>
+        </div>
+      </Panel>
 
       <OutputSettings settings={processingSettings} onChange={onProcessingChange} />
     </div>
