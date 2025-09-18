@@ -1,12 +1,24 @@
+export type DimensionUnit = 'in' | 'mm';
+
+export type DpiLevel = 600 | 1200;
+
+export interface PixelDimensions {
+  width: number;
+  height: number;
+}
+
+export interface CropSize {
+  name: string;
+  width: number;
+  height: number;
+  unit: DimensionUnit;
+  referencePixels: Record<DpiLevel, PixelDimensions>;
+}
+
 export interface CropRatio {
   name: string;
   ratio: number;
-  sizes: Array<{
-    name: string;
-    width: number;
-    height: number;
-    unit: 'in' | 'mm';
-  }>;
+  sizes: CropSize[];
 }
 
 export interface WatermarkSettings {

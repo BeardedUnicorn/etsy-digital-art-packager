@@ -1,62 +1,77 @@
-import { CropRatio } from '../types';
+import { CropRatio, CropSize, DpiLevel } from '../types';
+
+const DPI_LEVELS: readonly DpiLevel[] = [600, 1200];
+
+const convertToInches = (value: number, unit: CropSize['unit']): number =>
+  unit === 'in' ? value : value / 25.4;
+
+const withReferencePixels = (size: Omit<CropSize, 'referencePixels'>): CropSize => {
+  const widthInches = convertToInches(size.width, size.unit);
+  const heightInches = convertToInches(size.height, size.unit);
+
+  const referencePixels = {} as CropSize['referencePixels'];
+  for (const level of DPI_LEVELS) {
+    referencePixels[level] = {
+      width: Math.round(widthInches * level),
+      height: Math.round(heightInches * level),
+    };
+  }
+
+  return {
+    ...size,
+    referencePixels,
+  };
+};
+
+const inchSize = (name: string, width: number, height: number): CropSize =>
+  withReferencePixels({ name, width, height, unit: 'in' });
 
 export const CROP_RATIOS: CropRatio[] = [
   {
-    name: '2:3 Portrait',
-    ratio: 2/3,
+    name: '2:3',
+    ratio: 2 / 3,
     sizes: [
-      { name: '4x6 in', width: 4, height: 6, unit: 'in' },
-      { name: '12x18 in', width: 12, height: 18, unit: 'in' },
-      { name: '20x30 in', width: 20, height: 30, unit: 'in' },
-      { name: '24x36 in', width: 24, height: 36, unit: 'in' },
-    ]
+      inchSize('4x6 in', 4, 6),
+      inchSize('12x18 in', 12, 18),
+      inchSize('20x30 in', 20, 30),
+      inchSize('24x36 in', 24, 36),
+    ],
   },
   {
-    name: '3:4 Portrait',
-    ratio: 3/4,
+    name: '3:4',
+    ratio: 3 / 4,
     sizes: [
-      { name: '9x12 in', width: 9, height: 12, unit: 'in' },
-      { name: '18x24 in', width: 18, height: 24, unit: 'in' },
-    ]
+      inchSize('9x12 in', 9, 12),
+      inchSize('18x24 in', 18, 24),
+    ],
   },
   {
-    name: '4:5 Portrait',
-    ratio: 4/5,
+    name: '4:5',
+    ratio: 4 / 5,
     sizes: [
-      { name: '8x10 in', width: 8, height: 10, unit: 'in' },
-      { name: '16x20 in', width: 16, height: 20, unit: 'in' },
-    ]
+      inchSize('8x10 in', 8, 10),
+      inchSize('16x20 in', 16, 20),
+    ],
   },
   {
-    name: '5:7 Portrait',
-    ratio: 5/7,
-    sizes: [
-      { name: '5x7 in', width: 5, height: 7, unit: 'in' },
-      { name: '10x14 in', width: 10, height: 14, unit: 'in' },
-    ]
+    name: '11:14',
+    ratio: 11 / 14,
+    sizes: [inchSize('11x14 in', 11, 14)],
   },
   {
-    name: '11x14 Standard',
-    ratio: 11/14,
+    name: 'A-Series',
+    ratio: 8.3 / 11.7,
     sizes: [
-      { name: '11x14 in', width: 11, height: 14, unit: 'in' },
-    ]
-  },
-  {
-    name: 'A-Series International',
-    ratio: 210/297,
-    sizes: [
-      { name: 'A4', width: 210, height: 297, unit: 'mm' },
-      { name: 'A3', width: 297, height: 420, unit: 'mm' },
-    ]
+      inchSize('A4 (8.3x11.7 in)', 8.3, 11.7),
+      inchSize('A3 (11.7x16.5 in)', 11.7, 16.5),
+    ],
   },
   {
     name: 'Special Fine Art',
-    ratio: 13/19,
-    sizes: [
-      { name: '13x19 in (Super B)', width: 13, height: 19, unit: 'in' },
-    ]
-  }
+    ratio: 13 / 19,
+    sizes: [inchSize('13x19 in', 13, 19)],
+  },
 ];
 
-export const DPI = 600;
+export const REFERENCE_DPI_LEVELS = DPI_LEVELS;
+export const DPI: DpiLevel = DPI_LEVELS[0];
