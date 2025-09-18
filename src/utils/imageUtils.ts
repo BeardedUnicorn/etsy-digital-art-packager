@@ -24,30 +24,26 @@ export const cropImageToRatio = (
     throw new Error('Could not get canvas context');
   }
   
-  const sourceRatio = sourceCanvas.width / sourceCanvas.height;
-  
-  let cropWidth, cropHeight, cropX, cropY;
-  
-  if (sourceRatio > targetRatio) {
-    // Source is wider, crop width
-    cropHeight = sourceCanvas.height;
-    cropWidth = cropHeight * targetRatio;
-    cropX = (sourceCanvas.width - cropWidth) / 2;
-    cropY = 0;
-  } else {
-    // Source is taller, crop height
-    cropWidth = sourceCanvas.width;
-    cropHeight = cropWidth / targetRatio;
-    cropX = 0;
-    cropY = (sourceCanvas.height - cropHeight) / 2;
+  const cropHeight = sourceCanvas.height;
+  const desiredCropWidth = cropHeight * targetRatio;
+
+  if (desiredCropWidth - sourceCanvas.width > 0.01) {
+    const sourceRatio = sourceCanvas.width / sourceCanvas.height;
+    throw new Error(
+      `Source image ratio (${sourceRatio.toFixed(4)}) is narrower than target ratio (${targetRatio.toFixed(4)}). ` +
+        'Cropping top or bottom is not allowed, so please provide a wider source image.'
+    );
   }
-  
+
+  const cropWidth = Math.max(1, Math.min(sourceCanvas.width, Math.round(desiredCropWidth)));
+  const cropX = Math.max(0, (sourceCanvas.width - cropWidth) / 2);
+
   canvas.width = cropWidth;
   canvas.height = cropHeight;
-  
+
   ctx.drawImage(
     sourceCanvas,
-    cropX, cropY, cropWidth, cropHeight,
+    cropX, 0, cropWidth, cropHeight,
     0, 0, cropWidth, cropHeight
   );
   
