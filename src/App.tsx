@@ -5,7 +5,7 @@ import { GeneratorPage } from './pages/GeneratorPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { GeneratedPreviewModal } from './components/GeneratedPreviewModal';
 import { useLocalStorage } from './hooks/useLocalStorage';
-import { CROP_RATIOS } from './constants/cropRatios';
+import { CROP_RATIOS, DPI } from './constants/cropRatios';
 import {
   loadImageFromFile,
   imageToCanvas,
@@ -33,7 +33,7 @@ const defaultWatermarkSettings: WatermarkSettings = {
 
 const defaultProcessingSettings: ProcessingSettings = {
   jpegQuality: 0.9,
-  defaultDpi: 600,
+  defaultDpi: DPI,
   dpiOverrides: {},
   shopName: '',
   shopLogoDataUrl: null,

@@ -1,4 +1,4 @@
-import { CROP_RATIOS } from '../constants/cropRatios';
+import { CROP_RATIOS, REFERENCE_DPI_LEVELS } from '../constants/cropRatios';
 import { ProcessingSettings } from '../types';
 import { getSizeKey } from '../utils/imageUtils';
 import { Panel } from './common/Panel';
@@ -97,6 +97,15 @@ export function OutputSettings({ settings, onChange }: OutputSettingsProps) {
                   const key = getSizeKey(ratio.name, size.name);
                   const current = settings.dpiOverrides[key] ?? '';
                   const hasOverride = key in settings.dpiOverrides;
+                  const referenceDetails = REFERENCE_DPI_LEVELS.map((level) => {
+                    const reference = size.referencePixels[level];
+                    if (!reference) {
+                      return null;
+                    }
+                    const formattedWidth = reference.width.toLocaleString();
+                    const formattedHeight = reference.height.toLocaleString();
+                    return `${level} DPI: ${formattedWidth} × ${formattedHeight} px`;
+                  }).filter(Boolean);
                   return (
                     <div
                       key={key}
@@ -114,6 +123,9 @@ export function OutputSettings({ settings, onChange }: OutputSettingsProps) {
                         <p className={`${theme.subheading} text-xs mt-1`}>
                           {size.width} × {size.height} {size.unit}
                         </p>
+                        {referenceDetails.length > 0 && (
+                          <p className={`${theme.subheading} text-[11px] mt-2`}>{referenceDetails.join(' • ')}</p>
+                        )}
                       </div>
                       <div className="flex items-center gap-3">
                         <input
